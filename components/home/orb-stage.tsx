@@ -3,7 +3,7 @@
 import { useState, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 
-import { SceneOrbits } from "@/components/orbita/scene-orbits";
+import { SceneOrbits } from "@/components/home/scene-orbits";
 
 /*
  * The centre of the home: the atoll, a small 3D diorama (island-scene.tsx)
@@ -14,7 +14,7 @@ import { SceneOrbits } from "@/components/orbita/scene-orbits";
  * (app/styles/island.css).
  */
 
-const IslandScene = dynamic(() => import("@/components/orbita/island-scene"), { ssr: false });
+const IslandScene = dynamic(() => import("@/components/home/island-scene"), { ssr: false });
 
 const WIDE_QUERY = "(min-width: 40rem)";
 function subscribeWide(onChange: () => void) {

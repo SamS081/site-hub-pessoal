@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { AtolLogin } from "@/components/orbita/login";
+import { AtolLogin } from "@/components/login/login";
 import "./login.css";
 
 export const metadata: Metadata = {

@@ -141,7 +141,7 @@ Home de uma tela (`h-dvh`, sem rolagem). Desktop: o palco da ilha centrado atrá
 
 ## Scene
 
-O oceano noturno (`components/orbita/sky.tsx`, `app/styles/sky.css`): gradiente do abismo até um brilho teal no horizonte (`--horizon: 64%`), água escura com ondulações turquesa lentas e uma coluna de brilho sob a ilha, pontos tênues no ar alto, halo turquesa atrás do centro, névoa baixa e grão fino. Só `transform` e `opacity` animam; com `prefers-reduced-motion` tudo para.
+O oceano noturno (`components/shared/sky.tsx`, `app/styles/sky.css`): gradiente do abismo até um brilho teal no horizonte (`--horizon: 64%`), água escura com ondulações turquesa lentas e uma coluna de brilho sob a ilha, pontos tênues no ar alto, halo turquesa atrás do centro, névoa baixa e grão fino. Só `transform` e `opacity` animam; com `prefers-reduced-motion` tudo para.
 
 ## Logo
 

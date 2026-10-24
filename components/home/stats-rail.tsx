@@ -3,7 +3,7 @@
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { animate, useReducedMotion } from "motion/react";
 
-import { clock, type DaySummary } from "@/components/orbita/day";
+import { clock, type DaySummary } from "@/components/home/day";
 import { cn } from "@/lib/utils";
 
 const delay = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;

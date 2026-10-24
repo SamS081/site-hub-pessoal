@@ -2,14 +2,14 @@
 
 import { useEffect } from "react";
 
-import { BottomBar } from "@/components/orbita/bottom-bar";
-import { summarize } from "@/components/orbita/day";
-import { NowRing, PeriodNote } from "@/components/orbita/day-marks";
-import { HeroCopy } from "@/components/orbita/hero-copy";
-import { OrbStage } from "@/components/orbita/orb-stage";
-import { Sky } from "@/components/orbita/sky";
-import { StatsRail } from "@/components/orbita/stats-rail";
-import { TopBar } from "@/components/orbita/top-bar";
+import { BottomBar } from "@/components/home/bottom-bar";
+import { summarize } from "@/components/home/day";
+import { NowRing, PeriodNote } from "@/components/home/day-marks";
+import { HeroCopy } from "@/components/home/hero-copy";
+import { OrbStage } from "@/components/home/orb-stage";
+import { Sky } from "@/components/shared/sky";
+import { StatsRail } from "@/components/home/stats-rail";
+import { TopBar } from "@/components/home/top-bar";
 import { useNow, useOrbita } from "@/lib/orbita";
 import { playSound } from "@/lib/sound";
 

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
-import { HomeClient } from "@/components/orbita/home-client";
+import { HomeClient } from "@/components/home/home-client";
 import { getCurrentUser } from "@/lib/auth";
 
 export default function Page() {

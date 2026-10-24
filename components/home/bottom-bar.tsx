@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { longDate, shortDate } from "@/components/orbita/day";
+import { longDate, shortDate } from "@/components/home/day";
 import { dateKey } from "@/lib/orbita";
 
 const delay = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;

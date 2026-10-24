@@ -32,7 +32,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AtolMark } from "@/components/orbita/logo";
+import { AtolMark } from "@/components/shared/logo";
 import { FieldScene } from "@/components/habitos/field-scene";
 import { dateKey, useNow, useOrbita, weekOf, type Habit } from "@/lib/orbita";
 import { holdTone, playSound, setSoundOn, useSoundOn } from "@/lib/sound";

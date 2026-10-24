@@ -4,7 +4,7 @@ import type { CSSProperties, MouseEvent } from "react";
 import Link from "next/link";
 import { LogOut, Volume2, VolumeX } from "lucide-react";
 
-import { AtolMark } from "@/components/orbita/logo";
+import { AtolMark } from "@/components/shared/logo";
 import {
   DropdownMenu,
   DropdownMenuContent,

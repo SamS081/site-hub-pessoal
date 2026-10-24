@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Eye, EyeOff, LoaderCircle, Volume2, VolumeX } from "lucide-react";
 
 import { requestReset, setNewPassword, signIn, signUp, type AuthResult, type FieldErrors } from "@/app/login/actions";
-import { AtolLogo } from "@/components/orbita/logo";
-import { Sky } from "@/components/orbita/sky";
+import { AtolLogo } from "@/components/shared/logo";
+import { Sky } from "@/components/shared/sky";
 import { playSound, setSoundOn, useSoundOn } from "@/lib/sound";
 
 type Mode = "entrar" | "criar" | "recuperar" | "redefinir";
