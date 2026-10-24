@@ -5,13 +5,17 @@ import { redirect } from "next/navigation";
 
 import {
   checkCredentials,
+  clearFailedSignIns,
   createResetToken,
   createUser,
   endSession,
+  isSignInLocked,
   normalizeEmail,
+  recordFailedSignIn,
   resetPassword,
   startSession,
 } from "@/lib/auth";
+import { mailEnabled, sendMail } from "@/lib/mail";
 
 /*
  * The login page's server side. Every action validates again here: the
@@ -34,32 +38,21 @@ function checkPassword(password: unknown): password is string {
   return typeof password === "string" && password.length >= MIN_PASSWORD && password.length <= 200;
 }
 
-/*
- * A small brake on password guessing: after 5 wrong tries for one e-mail,
- * that e-mail waits a minute. In memory, so it resets with the server.
- */
-const attempts = new Map<string, { count: number; until: number }>();
-const MAX_TRIES = 5;
-const LOCK_MS = 60_000;
-
 export async function signIn(email: string, password: string): Promise<AuthResult> {
   if (!checkEmail(email)) return fail({ email: "Confira o e-mail: falta o @ ou o domínio." });
   if (typeof password !== "string" || !password) return fail({ password: "Digite sua senha." });
 
-  const key = normalizeEmail(email);
-  const entry = attempts.get(key);
-  if (entry && entry.until > Date.now()) {
+  if (await isSignInLocked(email)) {
     return fail({ form: "Muitas tentativas. Espere um minuto e tente de novo." });
   }
 
   const user = await checkCredentials(email, password);
   if (!user) {
-    const count = (entry?.count ?? 0) + 1;
-    attempts.set(key, { count: count >= MAX_TRIES ? 0 : count, until: count >= MAX_TRIES ? Date.now() + LOCK_MS : 0 });
+    await recordFailedSignIn(email);
     return fail({ form: "E-mail ou senha não conferem." });
   }
 
-  attempts.delete(key);
+  await clearFailedSignIns(email);
   await startSession(user.id);
   return { ok: true };
 }
@@ -79,24 +72,50 @@ export async function signUp(name: string, email: string, password: string): Pro
   return { ok: true };
 }
 
+const isProduction = process.env.NODE_ENV === "production";
+
 /*
- * Creates a one-time link to set a new password. Atol has no e-mail sender
- * configured yet, so the link is written to the server log; in development
- * it is also returned to the page so it can be opened right away. The answer
- * is the same whether or not the account exists.
+ * The site's address for links in e-mails. In production it must come from
+ * SITE_URL: the Host header is set by whoever sends the request, so a link
+ * built from it could point a reset token at someone else's site.
+ */
+async function siteUrl() {
+  if (process.env.SITE_URL) return process.env.SITE_URL.replace(/\/+$/, "");
+  if (isProduction) return null;
+  const h = await headers();
+  return `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}`;
+}
+
+/*
+ * Creates a one-time link to set a new password and e-mails it. Without an
+ * e-mail sender (see lib/mail.ts) the reset is off in production; in
+ * development the link is logged and returned to the page so it can be
+ * opened right away. The answer is the same whether or not the account
+ * exists.
  */
 export async function requestReset(email: string): Promise<AuthResult> {
   if (!checkEmail(email)) return fail({ email: "Confira o e-mail: falta o @ ou o domínio." });
 
-  const token = createResetToken(email);
+  const site = await siteUrl();
+  if ((isProduction && !mailEnabled()) || !site) {
+    return fail({ form: "A recuperação de senha ainda não está disponível. Fale com quem cuida do Atol." });
+  }
+
+  const token = await createResetToken(email);
   if (!token) return { ok: true };
 
-  const h = await headers();
-  const origin = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}`;
-  const link = `${origin}/login?redefinir=${token}`;
-  console.info(`[atol] Link para nova senha de ${normalizeEmail(email)}: ${link}`);
+  const link = `${site}/login?redefinir=${token}`;
+  if (mailEnabled()) {
+    await sendMail(
+      normalizeEmail(email),
+      "Sua nova senha do Atol",
+      `Alguém pediu uma nova senha para esta conta do Atol.\n\nPara escolher a nova senha, abra o link abaixo. Ele vale por 30 minutos e funciona uma vez só:\n${link}\n\nSe não foi você, pode ignorar este e-mail. Sua senha continua a mesma.`,
+    );
+  }
+  if (isProduction) return { ok: true };
 
-  return process.env.NODE_ENV === "production" ? { ok: true } : { ok: true, devLink: link };
+  console.info(`[atol] Link para nova senha de ${normalizeEmail(email)}: ${link}`);
+  return { ok: true, devLink: link };
 }
 
 export async function setNewPassword(token: string, password: string): Promise<AuthResult> {

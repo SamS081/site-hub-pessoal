@@ -2,56 +2,71 @@ import "server-only";
 
 import { mkdirSync } from "node:fs";
 import path from "node:path";
-import { DatabaseSync } from "node:sqlite";
+import { createClient, type Client } from "@libsql/client";
 
 /*
- * Atol's accounts live in one SQLite file (Node's built-in node:sqlite, no
- * server to run). The path can be moved with ATOL_DB_PATH; by default it is
- * data/atol.db next to the app, which git ignores.
+ * Atol's accounts live in one SQLite database, reached through libSQL. In
+ * production that is a Turso database (TURSO_DATABASE_URL and
+ * TURSO_AUTH_TOKEN); without them it is a local file, data/atol.db by
+ * default (ATOL_DB_PATH moves it), which git ignores.
  *
  *   users            one row per account; the password is a scrypt hash
  *   sessions         signed-in browsers; only a SHA-256 of the cookie token
  *   password_resets  one-time links to set a new password; also hashed
+ *   login_attempts   wrong passwords per e-mail, for the sign-in brake
  */
 
-const DB_PATH = process.env.ATOL_DB_PATH ?? path.join(process.cwd(), "data", "atol.db");
+const SCHEMA = `
+  CREATE TABLE IF NOT EXISTS users (
+    id            TEXT PRIMARY KEY,
+    name          TEXT NOT NULL,
+    email         TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at    INTEGER NOT NULL
+  );
 
-// Kept on globalThis so dev hot reloads reuse the same connection.
-const g = globalThis as unknown as { atolDb?: DatabaseSync };
+  CREATE TABLE IF NOT EXISTS sessions (
+    token_hash TEXT PRIMARY KEY,
+    user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS sessions_user ON sessions(user_id);
 
-function open() {
-  mkdirSync(path.dirname(DB_PATH), { recursive: true });
-  const db = new DatabaseSync(DB_PATH);
-  db.exec(`
-    PRAGMA journal_mode = WAL;
-    PRAGMA foreign_keys = ON;
+  CREATE TABLE IF NOT EXISTS password_resets (
+    token_hash TEXT PRIMARY KEY,
+    user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at INTEGER NOT NULL
+  );
 
-    CREATE TABLE IF NOT EXISTS users (
-      id            TEXT PRIMARY KEY,
-      name          TEXT NOT NULL,
-      email         TEXT NOT NULL UNIQUE,
-      password_hash TEXT NOT NULL,
-      created_at    INTEGER NOT NULL
-    );
+  CREATE TABLE IF NOT EXISTS login_attempts (
+    email        TEXT PRIMARY KEY,
+    count        INTEGER NOT NULL,
+    locked_until INTEGER NOT NULL
+  );
+`;
 
-    CREATE TABLE IF NOT EXISTS sessions (
-      token_hash TEXT PRIMARY KEY,
-      user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      expires_at INTEGER NOT NULL
-    );
-    CREATE INDEX IF NOT EXISTS sessions_user ON sessions(user_id);
-
-    CREATE TABLE IF NOT EXISTS password_resets (
-      token_hash TEXT PRIMARY KEY,
-      user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      expires_at INTEGER NOT NULL
-    );
-  `);
-  return db;
+function databaseUrl() {
+  if (process.env.TURSO_DATABASE_URL) return process.env.TURSO_DATABASE_URL;
+  const file = process.env.ATOL_DB_PATH ?? path.join(process.cwd(), "data", "atol.db");
+  mkdirSync(path.dirname(file), { recursive: true });
+  return `file:${file}`;
 }
 
+async function open() {
+  const client = createClient({ url: databaseUrl(), authToken: process.env.TURSO_AUTH_TOKEN });
+  await client.executeMultiple(SCHEMA);
+  return client;
+}
+
+// Kept on globalThis so dev hot reloads reuse the same connection.
+const g = globalThis as unknown as { atolDb?: Promise<Client> };
+
+/** The database, with its tables created on first use. */
 export function db() {
-  g.atolDb ??= open();
+  g.atolDb ??= open().catch((error) => {
+    g.atolDb = undefined;
+    throw error;
+  });
   return g.atolDb;
 }
 
