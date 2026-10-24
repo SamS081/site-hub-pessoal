@@ -1,26 +1,180 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "./styles/sky.css";
+@import "./styles/glass.css";
+@import "./styles/island.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-manrope);
   --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-bricolage);
+  --font-display: var(--font-bricolage);
+  --color-star: var(--star);
+  --color-done: var(--done);
+  --color-late: var(--late);
+  --color-nebula: var(--nebula);
+  --color-line: var(--line);
+  --color-raised: var(--raised);
+  --color-lagoon: var(--lagoon);
+  --color-coral: var(--coral);
+  --color-sky: var(--sky);
+  --shadow-elevated-2xs: 0 1px 2px rgb(1 8 12 / 0.4), 0 0 0 1px var(--line);
+  --shadow-elevated-sm: 0 10px 24px -8px rgb(1 8 12 / 0.6), 0 0 0 1px var(--line);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/*
+ * Palette "Laguna": Atol at night. The ground is the abyss, a deep blue-green
+ * that is never black; text is warm sand, never white. Colour is light under
+ * water: lagoon turquoise is the one accent that means "done" and progress,
+ * coral is "now" and "late" (the warm thing on a cold sea), sky blue is a
+ * quiet secondary for notes and charts. Accents are used in small doses:
+ * a bar, a dot, an arc, never a filled surface.
+ *
+ * Contrast on --background (#04121a): foreground 15.3:1, muted 7.2:1,
+ * lagoon 10.1:1, coral 6.7:1, sky 12.1:1; muted on --raised 6.3:1.
+ */
+:root {
+  --background: #04121a;
+  --foreground: #eee6d3;
+  --raised: #0b2129;
+  --line: rgb(238 230 211 / 0.12);
+  --lagoon: #2fd3c0;
+  --coral: #ff6a4d;
+  --sky: #8fd8ff;
+  --star: var(--coral);
+  --done: var(--lagoon);
+  --late: var(--coral);
+  --nebula: var(--sky);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1);
+
+  --card: var(--raised);
+  --card-foreground: var(--foreground);
+  --popover: #0d262f;
+  --popover-foreground: var(--foreground);
+  --primary: var(--foreground);
+  --primary-foreground: var(--background);
+  --secondary: #10303a;
+  --secondary-foreground: var(--foreground);
+  --muted: #0e2a33;
+  --muted-foreground: #8fa3a3;
+  --accent: #123540;
+  --accent-foreground: var(--foreground);
+  --destructive: #ff7a66;
+  --border: var(--line);
+  --input: rgb(238 230 211 / 0.18);
+  --ring: rgb(47 211 192 / 0.85);
+  --chart-1: var(--lagoon);
+  --chart-2: var(--sky);
+  --chart-3: var(--coral);
+  --chart-4: #f2c48d;
+  --chart-5: #5f8f99;
+  --radius: 0.75rem;
+  --sidebar: var(--raised);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--lagoon);
+  --sidebar-primary-foreground: var(--background);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--ring);
+
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    overflow-x: clip;
+  }
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+    scrollbar-color: rgb(238 230 211 / 0.22) var(--background);
+    scrollbar-width: thin;
+  }
+  ::selection {
+    background: rgb(47 211 192 / 0.3);
+    color: var(--foreground);
+  }
+  input,
+  textarea {
+    caret-color: var(--lagoon);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Small-caps labels, as printed on a nautical chart */
+@utility atlas-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+
+/*
+ * The Atol wordmark voice: Bricolage at its heaviest weight, a touch
+ * condensed and set tight, so the word reads as one solid shape. Optical
+ * size follows the font size (font-optical-sizing: auto), so small logos
+ * open up and stay legible while the hero gets the tight display cut.
+ */
+@utility wordmark {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variation-settings: "wdth" 90;
+  letter-spacing: -0.04em;
 }

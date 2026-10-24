@@ -1,0 +1,36 @@
+/* Atol: the 3D island stage (components/orbita/island-scene.tsx, orb-stage.tsx). Owned by the island pass. */
+
+@layer components {
+  /*
+   * The WebGL canvas stays invisible until its first frame is drawn, then
+   * fades in; the scene itself does the rise (in three.js), so this is only
+   * opacity, on the compositor.
+   */
+  .island-stage {
+    opacity: 0;
+    transition: opacity 1.4s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) 0.15s;
+  }
+  .island-stage[data-ready="true"] {
+    opacity: 1;
+  }
+  .island-stage canvas {
+    display: block;
+  }
+
+  /* No WebGL: a flat silhouette, centred, about the diorama's size. */
+  .island-fallback {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 62%;
+    height: auto;
+    max-height: 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .island-stage {
+      transition-duration: 0.4s;
+      transition-delay: 0s;
+    }
+  }
+}

@@ -1,0 +1,399 @@
+/* Atol scene: the night ocean behind the home (components/orbita/sky.tsx), plus the drawn orbits and moonlets (scene-orbits.tsx). The 3D island itself lives in island.css. */
+
+/*
+ * Night ocean. The air is the abyss colour, lifting into a dim teal glow on
+ * the horizon (about two thirds down); below it a calm, dark water plane
+ * carries slow lagoon-coloured ripple highlights and a glint column under
+ * the island. Faint specks hang in the upper air (stars, or bioluminescence:
+ * it is meant to be ambiguous), a soft turquoise glow sits behind the centre
+ * where the island floats, and low sea mist drifts over the water.
+ *
+ * Motion budget: every animated property is `transform` or `opacity`, so the
+ * scene is composited, never re-laid-out or repainted per frame. Textures are
+ * SVG feTurbulence noise and gradients, rasterised once. Loops are 30 to 90
+ * seconds long and out of phase. Reduced motion: a still picture.
+ */
+
+:root {
+  /* Horizon line, as a share of the viewport height. */
+  --horizon: 64%;
+  /* Sea mist: wispy fractal noise in a dark teal, alpha from the noise. */
+  --mist-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='420' viewBox='0 0 900 420' preserveAspectRatio='none'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0045 0.011' numOctaves='4' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.17 0 0 0 0 0.33 0 0 0 0 0.35 2.1 0 0 0 -0.8'/%3E%3C/filter%3E%3Crect width='900' height='420' filter='url(%23f)'/%3E%3C/svg%3E");
+  --mist-noise-b: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='420' viewBox='0 0 900 420' preserveAspectRatio='none'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.006 0.014' numOctaves='4' seed='23' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.14 0 0 0 0 0.29 0 0 0 0 0.32 2.2 0 0 0 -0.9'/%3E%3C/filter%3E%3Crect width='900' height='420' filter='url(%23f)'/%3E%3C/svg%3E");
+  /* Ripple streaks: noise stretched flat, lagoon-tinted highlights and abyss troughs. */
+  --ripple-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1400' height='300' viewBox='0 0 1400 300' preserveAspectRatio='none'%3E%3Cfilter id='r' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0022 0.07' numOctaves='2' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.86 0 0 0 0 0.79 2.8 0 0 0 -1.5'/%3E%3C/filter%3E%3Crect width='1400' height='300' filter='url(%23r)'/%3E%3C/svg%3E");
+  --ripple-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1400' height='300' viewBox='0 0 1400 300' preserveAspectRatio='none'%3E%3Cfilter id='r' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.003 0.09' numOctaves='2' seed='19' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.004 0 0 0 0 0.04 0 0 0 0 0.06 2.4 0 0 0 -1.2'/%3E%3C/filter%3E%3Crect width='1400' height='300' filter='url(%23r)'/%3E%3C/svg%3E");
+}
+
+@layer components {
+  /* ---------- air and water colour ---------- */
+
+  .sky-air {
+    background:
+      /* the horizon glow: a wide, low band of teal light */
+      radial-gradient(90% 16% at 50% var(--horizon), rgb(47 211 192 / 0.16), rgb(47 211 192 / 0) 70%),
+      radial-gradient(140% 34% at 50% var(--horizon), rgb(18 72 80 / 0.55), rgb(18 72 80 / 0) 75%),
+      /* a little sky-blue in the high air, off-centre, so the top is not flat */
+      radial-gradient(70% 50% at 22% -8%, rgb(143 216 255 / 0.06), transparent 70%),
+      linear-gradient(
+        to bottom,
+        #030e15 0%,
+        #04121a 28%,
+        #072029 50%,
+        #0d3138 var(--horizon),
+        #05171e calc(var(--horizon) + 4%),
+        #031118 82%,
+        #020b10 100%
+      );
+  }
+
+  /* Soft vignette: the corners fall away into the abyss. */
+  .sky-vignette {
+    background: radial-gradient(120% 90% at 50% 52%, transparent 55%, rgb(1 7 10 / 0.6) 100%);
+  }
+
+  /* ---------- glow behind the island ---------- */
+
+  .sky-parallax {
+    transition: transform 1.6s var(--ease-out-expo);
+  }
+
+  /*
+   * A wide turquoise halo centred where the island sits: the lagoon lit from
+   * within. It breathes very slowly (opacity and scale only).
+   */
+  .sky-glow {
+    position: absolute;
+    display: block;
+    left: 50%;
+    top: 54%;
+    width: min(110vw, 150vh);
+    aspect-ratio: 1.6;
+    translate: -50% -50%;
+    background:
+      radial-gradient(closest-side, rgb(47 211 192 / 0.2), rgb(47 211 192 / 0.07) 45%, rgb(47 211 192 / 0) 100%);
+    animation: sky-breathe 14s ease-in-out infinite alternate;
+  }
+
+  /* ---------- specks in the upper air ---------- */
+
+  /*
+   * Two tiled layers of tiny dots, painted with radial gradients. The tiles
+   * have unrelated sizes, so their sum does not visibly repeat. Masked to
+   * the upper air, fading out well before the horizon glow.
+   */
+  .sky-specks {
+    position: absolute;
+    display: block;
+    inset: 0 0 30% 0;
+    mask-image: linear-gradient(to bottom, #000 0%, rgb(0 0 0 / 0.75) 45%, transparent 100%);
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+  }
+  .sky-specks-a {
+    background-image:
+      radial-gradient(circle at 12% 18%, rgb(238 230 211 / 0.75) 0.7px, transparent 1.4px),
+      radial-gradient(circle at 63% 42%, rgb(238 230 211 / 0.55) 0.6px, transparent 1.3px),
+      radial-gradient(circle at 87% 9%, rgb(238 230 211 / 0.65) 0.7px, transparent 1.4px),
+      radial-gradient(circle at 34% 77%, rgb(238 230 211 / 0.45) 0.6px, transparent 1.2px);
+    background-size: 263px 197px;
+    opacity: 0.7;
+    animation-name: sky-twinkle;
+    animation-duration: 9s;
+  }
+  .sky-specks-b {
+    background-image:
+      radial-gradient(circle at 22% 64%, rgb(143 216 255 / 0.8) 0.9px, transparent 1.8px),
+      radial-gradient(circle at 78% 28%, rgb(47 211 192 / 0.75) 0.9px, transparent 1.9px),
+      radial-gradient(circle at 51% 91%, rgb(238 230 211 / 0.6) 0.7px, transparent 1.4px);
+    background-size: 419px 311px;
+    opacity: 0.55;
+    animation-name: sky-twinkle-b;
+    animation-duration: 13s;
+    animation-delay: -5s;
+  }
+
+  /* ---------- water ---------- */
+
+  .sky-water {
+    top: var(--horizon);
+    overflow: hidden;
+    /* Darker toward the viewer; the horizon side keeps a little of the glow. */
+    background: linear-gradient(to bottom, rgb(13 49 56 / 0.5) 0%, rgb(4 18 26 / 0.2) 30%, rgb(2 10 14 / 0.55) 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 10%);
+  }
+
+  /*
+   * Ripples: one light set (lagoon highlights) and one dark set (troughs),
+   * sliding past each other very slowly. The layers are wider than the
+   * screen so their drift never shows an edge.
+   */
+  .sky-ripples {
+    position: absolute;
+    display: block;
+    left: -20%;
+    right: -20%;
+    top: 0;
+    bottom: 0;
+    background-repeat: repeat;
+    background-size: 1400px 100%;
+  }
+  .sky-ripples-light {
+    background-image: var(--ripple-light);
+    opacity: 0.32;
+    mask-image: linear-gradient(to bottom, #000 0%, rgb(0 0 0 / 0.5) 60%, rgb(0 0 0 / 0.2) 100%);
+    animation: sky-ripple 64s ease-in-out infinite alternate;
+  }
+  .sky-ripples-dark {
+    background-image: var(--ripple-dark);
+    opacity: 0.6;
+    animation: sky-ripple-rev 48s ease-in-out infinite alternate;
+  }
+
+  /*
+   * The glint: a column of brighter ripples on the water under the island,
+   * as if its lagoon light were reflected. It shimmers in place.
+   */
+  .sky-glint {
+    position: absolute;
+    display: block;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: min(46vw, 34rem);
+    translate: -50% 0;
+    background-image: var(--ripple-light);
+    background-size: 700px 100%;
+    mask-image: radial-gradient(50% 85% at 50% 0%, #000 0%, rgb(0 0 0 / 0.4) 55%, transparent 100%);
+    opacity: 0.75;
+    animation: sky-glint 7s ease-in-out infinite alternate;
+  }
+
+  /* ---------- sea mist ---------- */
+
+  .sky-mist {
+    position: absolute;
+    display: block;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+  }
+
+  /* A long, low bank lying right on the horizon. */
+  .sky-mist-horizon {
+    left: -10%;
+    right: -10%;
+    top: calc(var(--horizon) - 14%);
+    height: 26%;
+    background-image: var(--mist-noise);
+    mask-image: radial-gradient(50% 50% at 50% 55%, #000 25%, transparent 100%);
+    opacity: 0.4;
+    animation-name: sky-drift-x;
+    animation-duration: 74s;
+  }
+
+  /* Wisps low on the left and right, over the water. */
+  .sky-mist-left {
+    left: -18%;
+    width: 64%;
+    top: 58%;
+    height: 34%;
+    background-image: var(--mist-noise);
+    mask-image: radial-gradient(50% 50% at 45% 58%, #000 30%, transparent 100%);
+    opacity: 0.35;
+    animation-name: sky-drift-left;
+    animation-duration: 56s;
+  }
+  .sky-mist-right {
+    right: -20%;
+    width: 64%;
+    top: 62%;
+    height: 32%;
+    background-image: var(--mist-noise-b);
+    mask-image: radial-gradient(50% 50% at 55% 58%, #000 30%, transparent 100%);
+    opacity: 0.32;
+    animation-name: sky-drift-right;
+    animation-duration: 82s;
+    animation-delay: -20s;
+  }
+
+  /* ---------- finish ---------- */
+
+  /* Very fine grain, static, just enough to dither the long dark gradients. */
+  .sky-grain {
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+  }
+
+  /* ---------- the drawn orbits ---------- */
+
+  .scene-orbits,
+  .scene-moonlets {
+    animation: scene-plate-in 2.2s var(--ease-out-expo) 0.5s both;
+    transform-origin: 50% 50%;
+  }
+
+  /*
+   * Moonlets: a square the size of the ring, centred, rolled and squashed
+   * into the ring's ellipse by an inline transform (static); inside, a square
+   * that turns (the only thing animated), the dot on its right edge.
+   */
+  .scene-moonlet-track {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+  }
+  .scene-moonlet-spin {
+    position: absolute;
+    inset: 0;
+    animation-name: scene-spin;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+  .scene-moonlet {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 5px;
+    height: 5px;
+    margin: -2.5px -2.5px 0 0;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.72;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sky-glow,
+    .sky-specks,
+    .sky-ripples,
+    .sky-glint,
+    .sky-mist {
+      animation: none;
+    }
+    .sky-parallax {
+      transition: none;
+    }
+    .scene-orbits,
+    .scene-moonlets {
+      animation: scene-fade-in 0.6s ease both;
+    }
+    /* Each moonlet holds still at its phase (negative delay, paused). */
+    .scene-moonlet-spin {
+      animation-play-state: paused;
+    }
+  }
+}
+
+@keyframes sky-breathe {
+  from {
+    opacity: 0.8;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes sky-twinkle {
+  from {
+    opacity: 0.45;
+  }
+  to {
+    opacity: 0.8;
+  }
+}
+
+@keyframes sky-twinkle-b {
+  from {
+    opacity: 0.6;
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    opacity: 0.25;
+    transform: translate3d(0, -6px, 0);
+  }
+}
+
+@keyframes sky-glint {
+  from {
+    opacity: 0.55;
+    transform: translate3d(-1.5%, 0, 0) scaleX(0.96);
+  }
+  to {
+    opacity: 0.9;
+    transform: translate3d(1.5%, 0, 0) scaleX(1.04);
+  }
+}
+
+@keyframes sky-drift-x {
+  from {
+    transform: translate3d(-3%, 0, 0);
+  }
+  to {
+    transform: translate3d(3%, 0, 0);
+  }
+}
+
+@keyframes sky-drift-left {
+  from {
+    transform: translate3d(-4%, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(6%, -2%, 0) scale(1.06);
+  }
+}
+
+@keyframes sky-drift-right {
+  from {
+    transform: translate3d(5%, 0, 0) scale(1.04);
+  }
+  to {
+    transform: translate3d(-6%, -1.5%, 0) scale(0.98);
+  }
+}
+
+@keyframes sky-ripple {
+  from {
+    transform: translate3d(-6%, 0, 0);
+  }
+  to {
+    transform: translate3d(6%, 0, 0);
+  }
+}
+
+@keyframes sky-ripple-rev {
+  from {
+    transform: translate3d(5%, 0, 0);
+    opacity: 0.5;
+  }
+  to {
+    transform: translate3d(-5%, 0, 0);
+    opacity: 0.7;
+  }
+}
+
+@keyframes scene-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes scene-plate-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes scene-fade-in {
+  from {
+    opacity: 0;
+  }
+}

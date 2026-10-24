@@ -1,0 +1,608 @@
+/* Atol login, palette "Laguna" (night ocean, deep and luminous).
+   Ground: the home's night ocean (<Sky />, app/styles/sky.css).
+   Motif: an atoll drawn from above (the logo's geometry, large): lagoon glow,
+   a reef broken by two passes, a slow surf line, islets and the island.
+   Foreground: a huge heavy heading, small spaced labels, underlined fields on
+   a dark glass panel and a sand pill with a lagoon knob. Everything here is
+   prefixed `login-`. All motion is transform/opacity (plus a one-time
+   stroke draw); reduced motion is a still picture. */
+
+.login-root {
+  --login-spring: var(--ease-spring, cubic-bezier(0.34, 1.36, 0.64, 1));
+  --login-out: var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
+  --login-ink: var(--foreground);
+  --login-hair: rgb(238 230 211 / 0.16);
+  --login-error: var(--destructive); /* #ff7a66 on the panel: 6.9:1 */
+}
+
+/* ---------- scenery ---------- */
+
+.login-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.login-system {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(96vh, 64vw);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+}
+
+.login-atoll {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.login-atoll-reef {
+  stroke: var(--lagoon);
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-dasharray: 1 1;
+  opacity: 0.85;
+}
+
+.login-atoll-surf-line {
+  stroke: var(--login-hair);
+  stroke-width: 1;
+  stroke-dasharray: 2 7;
+  vector-effect: non-scaling-stroke;
+}
+
+.login-atoll-speck {
+  fill: var(--sky);
+  opacity: 0.8;
+}
+
+.login-atoll-islet,
+.login-atoll-island {
+  fill: var(--foreground);
+}
+
+.login-atoll-cross {
+  stroke: rgb(238 230 211 / 0.4);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.login-atoll-surf,
+.login-atoll-in,
+.login-atoll-lagoon {
+  transform-box: view-box;
+  transform-origin: 0 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .login-atoll-in { animation: login-atoll-in 1.6s 0.15s var(--login-out) both; }
+  .login-atoll-reef { animation: login-draw 1.8s 0.3s var(--login-out) both; }
+  .login-atoll-reef-b { animation-delay: 0.55s; }
+  .login-atoll-surf { animation: login-spin 160s linear infinite; }
+  .login-atoll-lagoon { animation: login-breathe 12s ease-in-out infinite alternate; }
+}
+
+@keyframes login-atoll-in {
+  from { opacity: 0; transform: scale(0.94) rotate(-8deg); }
+}
+
+@keyframes login-draw {
+  from { stroke-dashoffset: 1; }
+}
+
+@keyframes login-spin {
+  to { transform: rotate(1turn); }
+}
+
+@keyframes login-breathe {
+  from { opacity: 0.75; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1.03); }
+}
+
+/* ---------- layout ---------- */
+
+.login-grid {
+  display: grid;
+  gap: 2.5rem;
+  align-content: center;
+  max-width: 90rem;
+}
+
+@media (max-width: 63.99rem) {
+  .login-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (min-width: 64rem) {
+  .login-grid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(12rem, 0.75fr) minmax(0, 23rem);
+    align-items: center;
+  }
+  .login-intro { grid-column: 1; }
+  .login-panel { grid-column: 3; }
+}
+
+/* phone: the atoll drifts up and right, behind the heading */
+@media (max-width: 63.99rem) {
+  .login-system {
+    top: 12rem;
+    left: 92%;
+    width: max(100vw, 26rem);
+    opacity: 0.7;
+  }
+}
+
+/* ---------- type ---------- */
+
+.login-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variation-settings: "wdth" 92;
+  font-size: clamp(2.75rem, 1.2rem + 4.6vw, 5.75rem);
+  line-height: 0.94;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  max-width: 11ch;
+  margin-left: -0.04em;
+}
+
+.login-caps {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground); /* 7.2:1 on the abyss */
+}
+
+.login-caps span {
+  margin-inline: 0.5em;
+}
+
+/* ---------- panel: dark glass, so the reef softens behind the form ---------- */
+
+.login-panel {
+  position: relative;
+  padding: 2rem 1.75rem 1.75rem;
+  border-radius: 1.75rem;
+  background: rgb(9 29 37 / 0.62);
+  box-shadow:
+    inset 0 1px 0 rgb(238 230 211 / 0.1),
+    inset 0 0 0 1px rgb(238 230 211 / 0.1),
+    0 30px 60px -30px rgb(1 7 10 / 0.9);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  backdrop-filter: blur(20px) saturate(140%);
+}
+
+@media (min-width: 40rem) {
+  .login-panel { padding: 2.5rem 2.25rem 2rem; }
+}
+
+/* ---------- entrance (rare: once per visit) ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  .login-enter {
+    animation: login-rise 800ms var(--login-out) both;
+    animation-delay: calc(80ms + var(--i, 0) * 80ms);
+  }
+  .login-swap {
+    animation: login-swap 360ms var(--login-out) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-enter,
+  .login-swap {
+    animation: login-fade 300ms ease both;
+  }
+}
+
+@keyframes login-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+    filter: blur(5px);
+  }
+}
+
+@keyframes login-swap {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(3px);
+  }
+}
+
+@keyframes login-fade {
+  from { opacity: 0; }
+}
+
+/* ---------- fields: hairline underline that inks in on focus ---------- */
+
+.login-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  transition: color 200ms ease;
+}
+
+.login-field:focus-within .login-label {
+  color: var(--lagoon);
+}
+
+.login-field[data-invalid] .login-label {
+  color: var(--login-error);
+}
+
+.login-well {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid rgb(238 230 211 / 0.28);
+  transition: border-color 200ms ease;
+}
+
+/* the lagoon line draws in from the left on focus */
+.login-well::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--lagoon);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 420ms var(--login-out);
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .login-well:hover {
+    border-color: rgb(238 230 211 / 0.55);
+  }
+}
+
+.login-well:focus-within::after {
+  transform: scaleX(1);
+}
+
+.login-field[data-invalid] .login-well {
+  border-color: var(--login-error);
+}
+
+.login-field[data-invalid] .login-well::after {
+  background: var(--login-error);
+}
+
+/* a single gentle nudge when an error appears */
+@media (prefers-reduced-motion: no-preference) {
+  .login-field[data-invalid] .login-well {
+    animation: login-nudge 360ms var(--login-out);
+  }
+}
+
+@keyframes login-nudge {
+  20% { transform: translateX(-4px); }
+  45% { transform: translateX(3px); }
+  70% { transform: translateX(-1.5px); }
+}
+
+.login-input {
+  width: 100%;
+  min-width: 0;
+  background: transparent;
+  padding: 0.7rem 0 0.75rem;
+  font-size: 1.0625rem; /* 17px: no zoom-on-focus on iOS */
+  color: var(--foreground);
+  outline: none;
+  text-overflow: ellipsis;
+}
+
+.login-input::placeholder {
+  color: #7d9393; /* 5.4:1 on the glass panel over the abyss */
+}
+
+/* keep the browser's autofill slab out of the underline field */
+.login-input:-webkit-autofill,
+.login-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--foreground);
+  caret-color: var(--foreground);
+  transition: background-color 9999s ease-out 0s;
+}
+
+.login-error {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--login-error);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .login-error { animation: login-swap 240ms var(--login-out) both; }
+}
+
+/* ---------- small controls ---------- */
+
+.login-eye {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  color: var(--muted-foreground);
+  box-shadow: inset 0 0 0 1px rgb(238 230 211 / 0.2);
+  transition:
+    transform 380ms var(--login-spring),
+    color 160ms ease,
+    box-shadow 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .login-eye:hover {
+    color: var(--foreground);
+    box-shadow: inset 0 0 0 1px rgb(238 230 211 / 0.55);
+  }
+}
+
+.login-eye:active {
+  transform: scale(0.9);
+  transition-duration: 100ms, 160ms, 160ms;
+  transition-timing-function: ease-out;
+}
+
+.login-link {
+  position: relative;
+  border-radius: 0.25rem;
+  color: var(--muted-foreground);
+  transition: color 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.login-link.text-foreground {
+  color: var(--foreground);
+}
+
+.login-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.35;
+  transform-origin: left center;
+  transition:
+    opacity 200ms ease,
+    transform 360ms var(--login-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .login-link:hover {
+    color: var(--foreground);
+  }
+  .login-link:hover::after {
+    opacity: 1;
+  }
+}
+
+/* round outlined secondary */
+.login-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.75rem;
+  padding-inline: 1.25rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: inset 0 0 0 1px rgb(238 230 211 / 0.4);
+  transition:
+    transform 420ms var(--login-spring),
+    background-color 200ms ease,
+    color 200ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .login-ghost:hover {
+    background: var(--login-ink);
+    color: var(--primary-foreground);
+  }
+}
+
+.login-ghost:active {
+  transform: scale(0.97);
+  transition-duration: 120ms, 200ms, 200ms;
+}
+
+/* ---------- primary: a sand pill with a lagoon knob that carries the arrow ---------- */
+
+.login-submit {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 3.5rem;
+  padding: 0 0.4375rem 0 1.5rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  transition:
+    transform 450ms var(--login-spring),
+    background-color 200ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.login-submit-knob {
+  display: grid;
+  place-items: center;
+  width: 2.625rem;
+  height: 2.625rem;
+  border-radius: 999px;
+  background: var(--lagoon);
+  color: var(--background);
+  transition: transform 500ms var(--login-spring);
+}
+
+.login-submit-arrow {
+  transition: transform 500ms var(--login-spring);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .login-submit:not(:disabled):hover {
+    background: #fff8e8;
+  }
+  .login-submit:not(:disabled):hover .login-submit-knob {
+    transform: translateX(-4px) scale(1.06);
+  }
+  .login-submit:not(:disabled):hover .login-submit-arrow {
+    transform: translateX(2px) rotate(-30deg);
+  }
+}
+
+.login-submit:not(:disabled):active {
+  transform: scale(0.97);
+  transition-duration: 120ms, 200ms;
+  transition-timing-function: ease-out;
+}
+
+.login-submit:disabled {
+  cursor: progress;
+  background: #c9c2b1;
+}
+
+/* ---------- focus: always visible, lagoon on the abyss ---------- */
+
+.login-home:focus-visible,
+.login-link:focus-visible,
+.login-eye:focus-visible,
+.login-ghost:focus-visible,
+.login-submit:focus-visible {
+  outline: 2px solid var(--lagoon);
+  outline-offset: 3px;
+}
+
+/* ---------- accessibility preferences ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .login-well::after,
+  .login-eye,
+  .login-ghost,
+  .login-submit,
+  .login-submit-knob,
+  .login-submit-arrow,
+  .login-link::after {
+    transition-property: color, background-color, box-shadow, opacity;
+  }
+  .login-well:focus-within::after {
+    transform: none;
+  }
+  .login-well::after {
+    transform: none;
+    opacity: 0;
+  }
+  .login-well:focus-within::after {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .login-panel {
+    background: var(--raised);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .login-well {
+    border-color: var(--login-ink);
+  }
+  .login-panel {
+    box-shadow: 0 0 0 1px var(--login-ink);
+  }
+  .login-atoll-surf-line {
+    stroke: rgb(238 230 211 / 0.6);
+  }
+}
+
+/* ---------- submit states: label swap, success, leaving for home ---------- */
+
+/* the arrow keeps its hover turn and also takes part in the icon swap */
+.login-submit-arrow {
+  transition:
+    transform 500ms var(--login-spring),
+    opacity 200ms var(--login-out),
+    scale 250ms var(--login-out),
+    filter 200ms var(--login-out);
+}
+
+/* success keeps the sand pill lit instead of the disabled grey */
+.login-submit[data-done]:disabled {
+  cursor: default;
+  background: var(--primary);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* each new label (Entrar → Entrando… → Tudo pronto) rises into place */
+  .login-label-swap {
+    display: inline-block;
+    animation: login-swap 260ms var(--login-out) both;
+  }
+
+  /* the knob gives one small spring when the check lands */
+  .login-submit[data-done] .login-submit-knob {
+    animation: login-knob-pop 500ms var(--login-spring);
+  }
+
+  /* leaving for home: the copy lifts away and the atoll draws you in */
+  .login-root[data-leaving] .login-enter {
+    animation: login-leave 380ms var(--login-out) calc(var(--i, 0) * 30ms) forwards;
+  }
+  .login-scene {
+    transition:
+      opacity 600ms var(--login-out),
+      transform 900ms var(--login-out);
+  }
+  .login-root[data-leaving] .login-scene {
+    opacity: 0;
+    transform: scale(1.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-root[data-leaving] .login-enter,
+  .login-root[data-leaving] .login-scene {
+    opacity: 0;
+    transition: opacity 300ms ease;
+    animation: none;
+  }
+}
+
+@keyframes login-knob-pop {
+  40% { transform: scale(1.12); }
+}
+
+@keyframes login-leave {
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+    filter: blur(4px);
+  }
+}

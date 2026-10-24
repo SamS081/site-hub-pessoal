@@ -1,0 +1,1122 @@
+/*
+ * "Mata": the Tarefas page's own identity, apart from the night-ocean Atol.
+ * A forest photograph is the ground, seen through layers that drift apart
+ * with the pointer and the scroll (ambience.tsx). Its left half sits under a
+ * blurred, darkened veil with a hard vertical edge at the centre, and the
+ * huge centred title crosses that edge: cut out of the veil (showing the
+ * sharp forest) on the left, solid mist-white on the right. Controls are glass: frosted, a bright top edge,
+ * a soft drop. Leaf green is the one accent: done, progress, the primary
+ * action. Amber means late.
+ *
+ * Contrast on the veil (≈ #0d1f12): ink 15:1, muted 8.6:1, leaf 10.4:1.
+ */
+
+@layer components {
+
+.mata,
+.mata-popover {
+  --mata-bg: #07130b;
+  --mata-ink: #eef5e8;
+  --mata-muted: rgb(238 245 232 / 0.7);
+  --mata-faint: rgb(238 245 232 / 0.42);
+  --mata-leaf: #8fe06b;
+  --mata-leaf-deep: #5fb83f;
+  --mata-on-leaf: #082210;
+  --mata-amber: #f1c46b;
+  --mata-line: rgb(238 245 232 / 0.16);
+  --mata-veil: rgb(9 26 14 / 0.52);
+  /* Through variables: the CSS compiler would otherwise keep only the -webkit- form. */
+  --mata-blur: blur(18px) saturate(1.4);
+  --mata-blur-veil: blur(16px) saturate(1.15);
+  --mata-gutter: clamp(1.25rem, 3.6vw, 3.5rem);
+  --mata-photo: url("/tarefas/floresta.jpg");
+  --mata-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --mata-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.mata {
+  /* Its own stacking context, so the fixed ground layers paint above this background. */
+  position: relative;
+  isolation: isolate;
+  color: var(--mata-ink);
+  background: var(--mata-bg);
+  font-family: var(--font-manrope), system-ui, sans-serif;
+}
+
+@media (max-width: 1023px) {
+  .mata {
+    --mata-photo: url("/tarefas/floresta-1280.jpg");
+  }
+}
+
+/* ---------- ground: layers with parallax (ambience.tsx) ---------- */
+
+.mata-ambience {
+  --px: 0;
+  --py: 0;
+  --sy: 0;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/*
+ * Each layer moves by its depth: --d px per unit of pointer travel (opposite
+ * to the pointer, so near things sweep past far ones) and --s px per px of
+ * scroll (upwards, slower than the page for far layers).
+ */
+.mata-layer,
+.mata-foliage {
+  will-change: transform;
+  transform: translate3d(
+    calc(var(--px) * var(--d, 0) * -1px),
+    calc(var(--py) * var(--d, 0) * -0.6px - var(--sy) * var(--s, 0) * 1px),
+    0
+  );
+}
+.mata-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.mata-photo {
+  --d: 18;
+  --s: 0.1;
+  /* Bleeds past the edges so its drift never shows a border. */
+  inset: -3% -3% -14% -3%;
+  background: var(--mata-photo) center top / cover no-repeat;
+  filter: saturate(1.08) contrast(1.04);
+}
+/* The photograph's shadows lean violet; a colour wash pulls them into the greens. */
+.mata-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #2f7a34;
+  mix-blend-mode: color;
+  opacity: 0.38;
+}
+
+/* Light shafts leaning in from the upper right, where the photo's sun is. */
+.mata-rays {
+  --d: 30;
+  --s: 0.16;
+  inset: -12% -8% 0 18%;
+  mix-blend-mode: screen;
+  mask-image: radial-gradient(75% 70% at 88% 0%, #000 0%, transparent 78%);
+}
+.mata-rays::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    112deg,
+    transparent 0 4%,
+    rgb(255 244 205 / 0.09) 5.5%,
+    transparent 7.5% 11%,
+    rgb(255 244 205 / 0.05) 12%,
+    transparent 14.5% 19%
+  );
+  animation: mata-rays 13s ease-in-out infinite alternate;
+}
+@keyframes mata-rays {
+  from { opacity: 0.55; translate: -1.5% 0; }
+  to { opacity: 1; translate: 1.5% 0; }
+}
+
+/* Two banks of mist drifting sideways. */
+.mata-mist {
+  --d: 44;
+  --s: 0.24;
+}
+.mata-mist-bank {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(206 236 204 / 0.16), rgb(206 236 204 / 0.05) 55%, transparent);
+  animation: mata-drift 40s ease-in-out infinite alternate;
+}
+.mata-mist-a {
+  left: -25vw;
+  bottom: 4vh;
+  width: 95vw;
+  height: 42vh;
+}
+.mata-mist-b {
+  right: -30vw;
+  top: 26vh;
+  width: 80vw;
+  height: 36vh;
+  animation-duration: 56s;
+  animation-direction: alternate-reverse;
+}
+@keyframes mata-drift {
+  from { translate: -6vw 0; }
+  to { translate: 6vw -1vh; }
+}
+
+/* The veil over the left half: a design plane, so it does not drift. */
+.mata-veil {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 50%;
+  background: var(--mata-veil);
+  backdrop-filter: var(--mata-blur-veil);
+  transform-origin: left;
+  animation: mata-veil 1.1s var(--mata-ease) 0.15s both;
+}
+@keyframes mata-veil {
+  from { scale: 0 1; }
+}
+
+/* Dust motes floating in the light. */
+.mata-motes-far {
+  --d: 60;
+  --s: 0.35;
+}
+.mata-motes-near {
+  --d: 120;
+  --s: 0.7;
+}
+.mata-mote {
+  position: absolute;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(255 250 222 / 0.95), rgb(255 250 222 / 0) 70%);
+  animation: mata-float var(--dur) ease-in-out infinite;
+}
+.mata-motes-near .mata-mote {
+  filter: blur(1.5px);
+}
+@keyframes mata-float {
+  0% { translate: 0 0; opacity: 0; }
+  20% { opacity: 0.9; }
+  75% { opacity: 0.6; }
+  100% { translate: 22px -70px; opacity: 0; }
+}
+
+/* Darker at the head and the foot so text always sits on calm ground. */
+.mata-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgb(4 12 7 / 0.6), transparent 24%, transparent 62%, rgb(4 12 7 / 0.78)),
+    radial-gradient(120% 90% at 50% 45%, transparent 45%, rgb(4 12 7 / 0.45));
+}
+
+/* Foliage silhouettes in the corners: the nearest layer, out of focus, swaying. */
+.mata-foliage {
+  --d: 150;
+  --s: 0.55;
+  position: absolute;
+  color: #030c06;
+  opacity: 0.94;
+}
+.mata-foliage-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  transform-origin: 4.5% 13.6%;
+  animation: mata-sway 9s ease-in-out infinite alternate;
+}
+.mata-foliage-tl {
+  top: -3vh;
+  left: -3vw;
+  width: clamp(12rem, 28vw, 30rem);
+  filter: blur(2.5px);
+}
+.mata-foliage-tr {
+  top: -5vh;
+  right: -4vw;
+  width: clamp(11rem, 24vw, 26rem);
+  filter: blur(3.5px);
+}
+.mata-foliage-tr .mata-foliage-svg {
+  scale: -1 1;
+  transform-origin: 95.5% 13.6%;
+  animation-duration: 11s;
+  animation-delay: -3s;
+}
+.mata-foliage-bl {
+  bottom: -6vh;
+  left: -4vw;
+  width: clamp(12rem, 26vw, 28rem);
+  filter: blur(5px);
+}
+.mata-foliage-bl .mata-foliage-svg {
+  scale: 1 -1;
+  transform-origin: 4.5% 86.4%;
+  animation-duration: 12s;
+  animation-delay: -5s;
+}
+.mata-foliage-br {
+  bottom: -8vh;
+  right: -5vw;
+  width: clamp(12rem, 30vw, 32rem);
+  filter: blur(6px);
+}
+.mata-foliage-br .mata-foliage-svg {
+  scale: -1 -1;
+  transform-origin: 95.5% 86.4%;
+  animation-duration: 10s;
+  animation-delay: -7s;
+}
+@keyframes mata-sway {
+  from { rotate: -1.6deg; }
+  to { rotate: 1.8deg; }
+}
+@media (max-width: 767px) {
+  .mata-foliage-bl,
+  .mata-foliage-br {
+    display: none;
+  }
+}
+
+/* A fine film grain over everything, so the flat layers read as one picture. */
+.mata-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- hero ---------- */
+
+/* The hero content rises and fades a little as the page scrolls on. */
+.mata-hero {
+  will-change: transform, opacity;
+  transform: translate3d(calc(var(--px, 0) * -10px), calc(var(--sy, 0) * 0.28px), 0);
+  opacity: clamp(0, calc(1 - var(--sy, 0) / 620), 1);
+}
+
+.mata-rule {
+  display: block;
+  width: clamp(1.5rem, 4vw, 3rem);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--mata-leaf));
+  box-shadow: 0 0 10px rgb(143 224 107 / 0.6);
+}
+.mata-rule-r {
+  background: linear-gradient(90deg, var(--mata-leaf), transparent);
+}
+
+.mata-pill {
+  border-radius: 999px;
+}
+
+/* Glass that stays legible over the bright half of the photo. */
+.mata-glass-dark {
+  background: linear-gradient(180deg, rgb(16 38 22 / 0.62), rgb(6 18 10 / 0.74));
+}
+
+.mata-cue-icon {
+  animation: mata-cue 2.2s var(--mata-ease) infinite;
+}
+@keyframes mata-cue {
+  0%, 100% { translate: 0 -1px; }
+  50% { translate: 0 3px; }
+}
+
+/* The header turns to frosted glass once the page has scrolled. */
+.mata-header {
+  transition: background-color 300ms var(--mata-ease), border-color 300ms var(--mata-ease), backdrop-filter 300ms var(--mata-ease);
+  border-bottom: 1px solid transparent;
+}
+.mata-header[data-scrolled] {
+  background: rgb(6 18 10 / 0.5);
+  border-bottom-color: var(--mata-line);
+  backdrop-filter: var(--mata-blur);
+}
+
+/* ---------- type ---------- */
+
+.mata-display {
+  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-weight: 900;
+  font-stretch: 118%;
+  font-variation-settings: "wdth" 118;
+  text-transform: uppercase;
+}
+
+.mata-eyebrow {
+  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mata-leaf);
+}
+
+.mata-caps {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mata-faint);
+}
+.mata-caps[data-late] {
+  color: var(--mata-amber);
+}
+
+/*
+ * The title is set twice in the same centred box (tasks-page.tsx): a
+ * cut-out copy that shows the sharp photo through its letters (a fixed
+ * background lines it up with the page's photo) clipped to the left half,
+ * and a solid copy clipped to the right half. The drop shadow sits on their
+ * shared parent, so it follows the visible letters of both. The box is centred on
+ * the screen, so its middle is the veil's edge.
+ */
+.mata-title {
+  position: relative;
+  --mata-cut: 50%;
+  font-size: clamp(3.5rem, 11.5vw, 13rem);
+  line-height: 0.84;
+  letter-spacing: -0.02em;
+}
+.mata-title-copy {
+  display: block;
+  white-space: nowrap;
+}
+.mata-title-copy + .mata-title-copy {
+  position: absolute;
+  inset: 0;
+}
+.mata-title-word {
+  filter: drop-shadow(0 0.04em 0.1em rgb(2 10 5 / 0.5));
+}
+.mata-title-cut {
+  /* The photo through the letters, lifted and lightly washed in leaf green. */
+  background:
+    linear-gradient(rgb(110 190 80 / 0.3), rgb(110 190 80 / 0.3)) fixed,
+    var(--mata-photo) center top / cover no-repeat fixed;
+  background-blend-mode: color, normal;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 1px rgb(238 245 232 / 0.3);
+  clip-path: inset(-0.2em calc(100% - var(--mata-cut)) -0.2em -0.2em);
+  filter: brightness(1.7) contrast(1.08) saturate(1.05);
+}
+.mata-title-solid {
+  color: var(--mata-ink);
+  clip-path: inset(-0.2em -0.2em -0.2em var(--mata-cut));
+}
+
+/* The day under the word: light italic, centred, between two leaf diamonds. */
+.mata-title-line {
+  display: block;
+  margin-top: 0.14em;
+  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-size: 0.3em;
+  font-style: italic;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.015em;
+  color: var(--mata-ink);
+  text-shadow: 0 2px 18px rgb(2 10 5 / 0.6);
+}
+.mata-title-dot {
+  width: 0.22em;
+  height: 0.22em;
+  rotate: 45deg;
+  border-radius: 0.04em;
+  background: var(--mata-leaf);
+  box-shadow: 0 0 0.5em rgb(143 224 107 / 0.8);
+}
+
+/* ---------- glass ---------- */
+
+.mata-glass {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.13), rgb(255 255 255 / 0.04));
+  border: 1px solid rgb(255 255 255 / 0.16);
+  backdrop-filter: var(--mata-blur);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    inset 0 -1px 0 rgb(0 0 0 / 0.18),
+    0 18px 50px -20px rgb(0 0 0 / 0.6);
+}
+
+.mata-panel,
+.mata-card {
+  border-radius: 1.75rem;
+  background: linear-gradient(180deg, rgb(20 44 26 / 0.55), rgb(8 22 12 / 0.68));
+}
+.mata-card {
+  border-radius: 1.5rem;
+}
+
+/* A day in the week card; the selected one carries a sliding light. */
+.mata-day {
+  border-radius: 0.875rem;
+  color: var(--mata-ink);
+  cursor: pointer;
+  transition: background-color 200ms var(--mata-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.mata-day:hover {
+  background: rgb(255 255 255 / 0.05);
+}
+.mata-day:focus-visible {
+  outline: 2px solid var(--mata-leaf);
+  outline-offset: 1px;
+}
+.mata-day-light {
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgb(143 224 107 / 0.2), rgb(143 224 107 / 0.08));
+  box-shadow: inset 0 0 0 1px rgb(143 224 107 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.2);
+}
+
+/* Buttons: frosted, lift on hover, press down on tap, ring on keyboard focus. */
+.mata-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--mata-ink);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 260ms var(--mata-spring),
+    background-color 220ms var(--mata-ease),
+    border-color 220ms var(--mata-ease),
+    box-shadow 220ms var(--mata-ease),
+    color 220ms var(--mata-ease),
+    opacity 220ms var(--mata-ease);
+}
+.mata-btn::after {
+  /* A sheen that slides across on hover. */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.18) 50%, transparent 70%);
+  background-size: 250% 100%;
+  background-position: 120% 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: background-position 700ms var(--mata-ease), opacity 300ms var(--mata-ease);
+}
+@media (hover: hover) {
+  .mata-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    border-color: rgb(255 255 255 / 0.3);
+    background-color: rgb(255 255 255 / 0.08);
+  }
+  .mata-btn:hover:not(:disabled)::after {
+    opacity: 1;
+    background-position: -20% 0;
+  }
+}
+.mata-btn:active:not(:disabled) {
+  transform: scale(0.95);
+  transition-duration: 90ms;
+}
+.mata-btn:focus-visible {
+  outline: 2px solid var(--mata-leaf);
+  outline-offset: 3px;
+}
+.mata-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.mata-btn-leaf {
+  color: var(--mata-on-leaf);
+  font-weight: 700;
+  background: linear-gradient(180deg, #a8ec86, var(--mata-leaf-deep));
+  border: 1px solid rgb(206 255 180 / 0.6);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.55),
+    inset 0 -2px 0 rgb(20 70 20 / 0.25),
+    0 10px 30px -10px rgb(120 220 80 / 0.55);
+}
+@media (hover: hover) {
+  .mata-btn-leaf:hover:not(:disabled) {
+    background-color: transparent;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.6),
+      inset 0 -2px 0 rgb(20 70 20 / 0.25),
+      0 14px 36px -10px rgb(140 230 90 / 0.7);
+  }
+}
+
+/* The square arrows of the hero; the first one is the lit one. */
+.mata-square {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.875rem;
+}
+
+/* ---------- nav ---------- */
+
+.mata-nav-link {
+  position: relative;
+  padding: 0.5rem 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mata-muted);
+  transition: color 200ms var(--mata-ease);
+}
+.mata-nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.1rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--mata-leaf);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 380ms var(--mata-ease);
+}
+.mata-nav-link:hover,
+.mata-nav-link[aria-current="page"] {
+  color: var(--mata-ink);
+}
+.mata-nav-link[aria-current="page"]::after {
+  transform: scaleX(1);
+  box-shadow: 0 0 12px rgb(143 224 107 / 0.7);
+}
+.mata-nav-link:focus-visible {
+  outline: 2px solid var(--mata-leaf);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* ---------- tasks ---------- */
+
+.mata-task {
+  position: relative;
+  border-radius: 1.125rem;
+  transition: background-color 220ms var(--mata-ease), border-color 220ms var(--mata-ease);
+  border: 1px solid transparent;
+}
+.mata-task + .mata-task::before {
+  content: "";
+  position: absolute;
+  inset: -1px 0.75rem auto 3.5rem;
+  height: 1px;
+  background: var(--mata-line);
+  opacity: 0.6;
+}
+.mata-task:hover,
+.mata-task:focus-within {
+  background: rgb(255 255 255 / 0.06);
+  border-color: rgb(255 255 255 / 0.1);
+}
+
+.mata-check {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  border: 1.5px solid rgb(238 245 232 / 0.45);
+  background: rgb(255 255 255 / 0.04);
+  color: var(--mata-on-leaf);
+  cursor: pointer;
+  transition:
+    transform 280ms var(--mata-spring),
+    background-color 240ms var(--mata-ease),
+    border-color 240ms var(--mata-ease),
+    box-shadow 240ms var(--mata-ease);
+}
+.mata-check:hover {
+  border-color: var(--mata-leaf);
+  box-shadow: 0 0 0 4px rgb(143 224 107 / 0.12);
+}
+.mata-check:active {
+  transform: scale(0.86);
+}
+.mata-check[aria-checked="true"] {
+  background: var(--mata-leaf);
+  border-color: var(--mata-leaf);
+  box-shadow: 0 0 18px rgb(143 224 107 / 0.45);
+}
+.mata-check:focus-visible {
+  outline: 2px solid var(--mata-leaf);
+  outline-offset: 3px;
+}
+
+/* The done line draws across the title's text, left to right. */
+.mata-task-title {
+  position: relative;
+  display: inline;
+  background: linear-gradient(currentColor, currentColor) left 55% / 0% 1.5px no-repeat;
+  transition: background-size 420ms var(--mata-ease), color 300ms var(--mata-ease);
+}
+.mata-task[data-done] .mata-task-title {
+  background-size: 100% 1.5px;
+}
+.mata-task[data-done] .mata-task-title {
+  color: var(--mata-faint);
+}
+
+.mata-chip {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.07);
+  border: 1px solid rgb(255 255 255 / 0.1);
+  color: var(--mata-muted);
+}
+.mata-chip[data-late] {
+  color: var(--mata-amber);
+  border-color: rgb(241 196 107 / 0.35);
+  background: rgb(241 196 107 / 0.08);
+}
+
+.mata-remove {
+  opacity: 0;
+  transition: opacity 200ms var(--mata-ease), color 200ms var(--mata-ease), transform 220ms var(--mata-spring);
+}
+.mata-task:hover .mata-remove,
+.mata-task:focus-within .mata-remove,
+.mata-remove:focus-visible {
+  opacity: 1;
+}
+@media (hover: none) {
+  .mata-remove {
+    opacity: 0.6;
+  }
+}
+.mata-remove:hover {
+  color: #ffb3a1;
+}
+.mata-remove:active {
+  transform: scale(0.85);
+}
+
+/* ---------- inputs ---------- */
+
+.mata-field {
+  border-radius: 1.25rem;
+  transition: border-color 220ms var(--mata-ease), box-shadow 220ms var(--mata-ease);
+}
+.mata-field:focus-within {
+  border-color: rgb(143 224 107 / 0.6);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    0 0 0 4px rgb(143 224 107 / 0.12),
+    0 18px 50px -20px rgb(0 0 0 / 0.6);
+}
+.mata-input {
+  min-width: 0;
+  background: transparent;
+  outline: none;
+  color: var(--mata-ink);
+}
+.mata-input::placeholder {
+  color: var(--mata-faint);
+}
+.mata-time {
+  color-scheme: dark;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  background: rgb(255 255 255 / 0.07);
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 0.75rem;
+  padding: 0.4rem 0.5rem;
+  color: var(--mata-ink);
+  outline: none;
+  transition: border-color 200ms var(--mata-ease);
+}
+.mata-time:focus-visible {
+  border-color: var(--mata-leaf);
+}
+.mata-time::-webkit-calendar-picker-indicator {
+  filter: invert(0.85) sepia(0.4) hue-rotate(50deg);
+  cursor: pointer;
+}
+
+/* ---------- composer ---------- */
+
+.mata-composer {
+  border-radius: 1.25rem;
+  transition: border-color 220ms var(--mata-ease), box-shadow 220ms var(--mata-ease);
+}
+.mata-composer:focus-within,
+.mata-composer[data-open] {
+  border-color: rgb(143 224 107 / 0.5);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    0 0 0 4px rgb(143 224 107 / 0.1),
+    0 24px 60px -24px rgb(0 0 0 / 0.7);
+}
+.mata-composer-plus {
+  color: var(--mata-faint);
+  transition: color 200ms var(--mata-ease), rotate 400ms var(--mata-spring);
+}
+.mata-composer:focus-within .mata-composer-plus {
+  color: var(--mata-leaf);
+  rotate: 90deg;
+}
+/* The quick row unfolds (grid rows 0fr → 1fr) while the field is in use. */
+.mata-composer-more {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 380ms var(--mata-ease), opacity 260ms var(--mata-ease);
+}
+.mata-composer[data-open] .mata-composer-more {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+/* The time chip in the composer: empty, a quiet "Horário"; set, it lights up. */
+.mata-time-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  border-radius: 0.8rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--mata-muted);
+  background: rgb(255 255 255 / 0.06);
+  border: 1px solid rgb(255 255 255 / 0.12);
+  cursor: pointer;
+  transition: color 200ms var(--mata-ease), background-color 200ms var(--mata-ease), border-color 200ms var(--mata-ease), transform 260ms var(--mata-spring);
+}
+.mata-time-chip:hover {
+  color: var(--mata-ink);
+  border-color: rgb(255 255 255 / 0.24);
+}
+.mata-time-chip:active {
+  transform: scale(0.95);
+}
+.mata-time-chip:has(.font-mono) {
+  color: var(--mata-ink);
+  background: rgb(143 224 107 / 0.14);
+  border-color: rgb(143 224 107 / 0.42);
+}
+.mata-time-chip:focus-visible,
+.mata-time-cell:focus-visible {
+  outline: 2px solid var(--mata-leaf);
+  outline-offset: 2px;
+}
+
+/* Quick choices: small glass pills, the chosen one lit. */
+.mata-preset {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 1.875rem;
+  padding: 0 0.7rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--mata-muted);
+  background: rgb(255 255 255 / 0.05);
+  border: 1px solid rgb(255 255 255 / 0.1);
+  cursor: pointer;
+  transition: color 180ms var(--mata-ease), background-color 180ms var(--mata-ease), border-color 180ms var(--mata-ease), transform 240ms var(--mata-spring);
+}
+.mata-preset:hover {
+  color: var(--mata-ink);
+  border-color: rgb(255 255 255 / 0.22);
+}
+.mata-preset:active {
+  transform: scale(0.94);
+}
+.mata-preset[aria-pressed="true"] {
+  color: var(--mata-on-leaf);
+  background: var(--mata-leaf);
+  border-color: var(--mata-leaf);
+}
+.mata-preset[aria-pressed="true"] .font-mono {
+  color: rgb(8 34 16 / 0.65);
+}
+.mata-preset:focus-visible {
+  outline: 2px solid var(--mata-leaf);
+  outline-offset: 2px;
+}
+
+.mata-kbd {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 0.35rem;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-bottom-width: 2px;
+  color: var(--mata-muted);
+}
+
+/* ---------- the time picker (portalled) ---------- */
+
+.mata-popover {
+  color: var(--mata-ink);
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  border-radius: 1.25rem;
+  background: linear-gradient(180deg, rgb(26 52 31 / 0.94), rgb(10 26 14 / 0.96));
+  border: 1px solid rgb(255 255 255 / 0.14);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    0 30px 70px -20px rgb(0 0 0 / 0.75);
+  backdrop-filter: var(--mata-blur);
+  transform-origin: var(--transform-origin);
+  transition: opacity 180ms var(--mata-ease), scale 220ms var(--mata-spring);
+}
+.mata-popover[data-starting-style],
+.mata-popover[data-ending-style] {
+  opacity: 0;
+  scale: 0.94;
+}
+
+.mata-wheel {
+  height: 9.5rem;
+  overflow-y: auto;
+  scroll-snap-type: y proximity;
+  scrollbar-width: none;
+  border-radius: 0.875rem;
+  background: rgb(0 0 0 / 0.22);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+  padding: 0.25rem;
+  mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+}
+.mata-wheel::-webkit-scrollbar {
+  display: none;
+}
+.mata-wheel-item {
+  display: block;
+  width: 100%;
+  height: 2rem;
+  border-radius: 0.6rem;
+  scroll-snap-align: center;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--mata-muted);
+  cursor: pointer;
+  transition: color 150ms var(--mata-ease), background-color 150ms var(--mata-ease);
+}
+.mata-wheel-item:hover {
+  color: var(--mata-ink);
+  background: rgb(255 255 255 / 0.06);
+}
+.mata-wheel-item[aria-pressed="true"] {
+  color: var(--mata-on-leaf);
+  background: var(--mata-leaf);
+  font-weight: 600;
+}
+.mata-wheel-item:focus-visible {
+  outline: 2px solid var(--mata-leaf);
+  outline-offset: -2px;
+}
+
+/* ---------- rows: time column, groups, now ---------- */
+
+/* The time column: the time large, how far from now under it. A button: it opens the picker. */
+.mata-time-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 2.75rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 180ms var(--mata-ease);
+}
+.mata-time-cell:hover {
+  background: rgb(255 255 255 / 0.06);
+}
+.mata-time-main {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.mata-time-rel {
+  font-size: 0.6875rem;
+  line-height: 1.1;
+  color: var(--mata-faint);
+  white-space: nowrap;
+}
+.mata-time-rel[data-tone="late"] {
+  color: var(--mata-amber);
+}
+.mata-time-rel[data-tone="soon"] {
+  color: var(--mata-leaf);
+}
+.mata-task[data-done] .mata-time-main {
+  color: var(--mata-faint);
+}
+.mata-task:has(.mata-time-rel[data-tone="late"]) .mata-time-main {
+  color: var(--mata-amber);
+}
+.mata-time-empty {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: var(--mata-faint);
+  opacity: 0.6;
+  transition: opacity 180ms var(--mata-ease), color 180ms var(--mata-ease);
+}
+.mata-time-empty-label {
+  opacity: 0;
+  transition: opacity 180ms var(--mata-ease);
+}
+.mata-task:hover .mata-time-empty,
+.mata-time-cell:focus-visible .mata-time-empty {
+  opacity: 1;
+  color: var(--mata-leaf);
+}
+.mata-task:hover .mata-time-empty-label,
+.mata-time-cell:focus-visible .mata-time-empty-label {
+  opacity: 1;
+}
+@media (hover: none) {
+  .mata-time-empty-label {
+    opacity: 1;
+  }
+}
+
+/* The title is a button that turns into a field to rename. */
+.mata-task-name {
+  cursor: text;
+  border-radius: 0.4rem;
+  outline: none;
+}
+.mata-task-name:focus-visible {
+  box-shadow: 0 0 0 2px var(--mata-leaf);
+}
+.mata-rename {
+  min-width: 0;
+  width: 100%;
+  height: 2.25rem;
+  padding: 0 0.6rem;
+  margin-left: -0.6rem;
+  border-radius: 0.6rem;
+  font-size: 0.9375rem;
+  color: var(--mata-ink);
+  background: rgb(0 0 0 / 0.25);
+  border: 1px solid rgb(143 224 107 / 0.5);
+  outline: none;
+}
+
+/* A just-added task glows once. */
+@keyframes mata-fresh {
+  0% { background-color: rgb(143 224 107 / 0.22); box-shadow: inset 0 0 0 1px rgb(143 224 107 / 0.5); }
+  100% { background-color: transparent; box-shadow: inset 0 0 0 1px transparent; }
+}
+.mata-task[data-new] {
+  animation: mata-fresh 1.6s var(--mata-ease);
+}
+
+/* Group heads: Manhã, Tarde, Noite, Sem horário, Feitas. */
+.mata-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1.1rem 0.75rem 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mata-muted);
+}
+.mata-group:first-child {
+  padding-top: 0.5rem;
+}
+.mata-group + .mata-task::before {
+  display: none;
+}
+
+/* Now: a lit line across the list at the present minute. */
+.mata-now {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 1.75rem;
+  padding: 0 0.5rem;
+  transform-origin: left;
+}
+.mata-now-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mata-leaf);
+  white-space: nowrap;
+}
+.mata-now-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--mata-leaf);
+  animation: mata-pulse 2.4s ease-out infinite;
+}
+.mata-now-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--mata-leaf), rgb(143 224 107 / 0.1));
+}
+.mata-now + .mata-task::before {
+  display: none;
+}
+@keyframes mata-pulse {
+  0% { box-shadow: 0 0 0 0 rgb(143 224 107 / 0.55); }
+  70%, 100% { box-shadow: 0 0 0 8px rgb(143 224 107 / 0); }
+}
+
+.mata-toast {
+  border-radius: 999px;
+}
+
+/* A section that is not there yet. */
+@keyframes mata-nudge {
+  0%, 100% { translate: 0; }
+  25% { translate: -3px; }
+  50% { translate: 3px; }
+  75% { translate: -2px; }
+}
+.mata-nudge {
+  animation: mata-nudge 360ms var(--mata-ease);
+}
+
+/* The menu, carried by a portal outside .mata: its own colours. */
+.mata-menu {
+  --popover-foreground: #eef5e8;
+  --muted-foreground: rgb(238 245 232 / 0.7);
+  --foreground: #eef5e8;
+  --accent: rgb(143 224 107 / 0.14);
+  --border: rgb(238 245 232 / 0.14);
+  --mata-blur: blur(18px) saturate(1.4);
+  background: linear-gradient(180deg, rgb(26 52 31 / 0.92), rgb(10 26 14 / 0.94)) !important;
+  border: 1px solid rgb(255 255 255 / 0.14) !important;
+  backdrop-filter: var(--mata-blur);
+}
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mata *,
+  .mata *::before,
+  .mata *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+  }
+}

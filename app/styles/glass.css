@@ -1,0 +1,425 @@
+/* Atol dark glass ("Laguna"), quiet controls and the home's entrance motion. Owned by the layout pass. */
+
+/*
+ * Dark glass over night water.
+ *
+ * Glass here is a lens of deep sea water: a translucent abyss-teal fill over a
+ * blurred, slightly saturated backdrop (so the lagoon glow tints it), a sand
+ * hairline that catches light at the top and fades to nothing below, and a
+ * deep, soft shadow. Small controls stay almost invisible until touched;
+ * panels (menus) are denser. Glass never sits on glass.
+ */
+:root {
+  --glass-fill: rgb(11 33 41 / 0.45);
+  --glass-fill-hover: rgb(18 53 64 / 0.6);
+  --glass-fill-strong: rgb(9 29 37 / 0.82);
+  --glass-solid: #0d262f;
+  --glass-blur: blur(14px) saturate(140%);
+  --glass-blur-strong: blur(24px) saturate(150%);
+  --glass-rim: linear-gradient(
+    175deg,
+    rgb(238 230 211 / 0.32),
+    rgb(238 230 211 / 0.1) 40%,
+    rgb(238 230 211 / 0.04) 100%
+  );
+  --glass-depth:
+    inset 0 1px 0 rgb(238 230 211 / 0.08),
+    0 14px 32px -16px rgb(1 7 10 / 0.7),
+    0 1px 2px rgb(1 7 10 / 0.4);
+  --glass-press: 0.97;
+  --dur-press: 120ms;
+  --dur-release: 380ms;
+  /* Page gutter shared by the bar, the copy columns and the footer. */
+  --gutter: clamp(1rem, 2.8vw, 2.75rem);
+}
+
+@layer components {
+  /* ---------- Shared material ---------- */
+  .glass,
+  .glass-button,
+  .glass-panel {
+    position: relative;
+    isolation: isolate;
+    background-color: var(--glass-fill);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-depth);
+  }
+
+  /* The rim: a gradient hairline cut out of a filled box with a mask. */
+  .glass::before,
+  .glass-button::before,
+  .glass-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--glass-rim);
+    pointer-events: none;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+  }
+
+  /* The sheen: a soft lagoon light under the pointer. */
+  .glass-button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      circle at var(--mx, 50%) var(--my, 0%),
+      rgb(47 211 192 / 0.22),
+      rgb(47 211 192 / 0.06) 40%,
+      transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  /* ---------- Glass button (pill) ---------- */
+  .glass-button {
+    color: var(--foreground);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      background-color 0.25s ease,
+      box-shadow 0.3s ease,
+      scale var(--dur-release) var(--ease-spring);
+  }
+  .glass-button:active,
+  .glass-button[data-pressed] {
+    scale: var(--glass-press);
+    transition:
+      background-color 0.25s ease,
+      box-shadow 0.3s ease,
+      scale var(--dur-press) var(--ease-out-expo);
+  }
+  .glass-button[data-popup-open],
+  .glass-button[aria-expanded="true"] {
+    background-color: var(--glass-fill-hover);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .glass-button:hover {
+      background-color: var(--glass-fill-hover);
+    }
+    .glass-button:hover::after {
+      opacity: 1;
+    }
+  }
+
+  /* Primary: the one filled control. Sand on the abyss. */
+  .glass-primary {
+    position: relative;
+    isolation: isolate;
+    color: var(--primary-foreground);
+    background-color: var(--primary);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.35),
+      0 10px 24px -12px rgb(1 7 10 / 0.8);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      background-color 0.2s ease,
+      scale var(--dur-release) var(--ease-spring);
+  }
+  .glass-primary:active {
+    scale: var(--glass-press);
+    transition:
+      background-color 0.2s ease,
+      scale var(--dur-press) var(--ease-out-expo);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .glass-primary:hover {
+      background-color: #fff8e8;
+    }
+  }
+
+  /* Press feedback alone, for quiet controls that are not glass. */
+  .glass-press {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      scale var(--dur-release) var(--ease-spring);
+  }
+  .glass-press:active {
+    scale: var(--glass-press);
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      scale var(--dur-press) var(--ease-out-expo);
+  }
+
+  /* ---------- Glass panel (menus, popovers) ---------- */
+  .glass-panel {
+    background-color: var(--glass-fill-strong);
+    -webkit-backdrop-filter: var(--glass-blur-strong);
+    backdrop-filter: var(--glass-blur-strong);
+    box-shadow:
+      inset 0 1px 0 rgb(238 230 211 / 0.1),
+      0 28px 56px -24px rgb(1 7 10 / 0.85),
+      0 8px 18px -10px rgb(1 7 10 / 0.6);
+  }
+
+  /*
+   * A menu grows out of its trigger: scale + fade + a whisper of blur, on a
+   * spring going in and a quick ease-out going away.
+   */
+  .glass-menu {
+    transform-origin: var(--transform-origin);
+    transition:
+      opacity 0.2s var(--ease-out-expo),
+      scale 0.42s var(--ease-spring),
+      translate 0.42s var(--ease-spring),
+      filter 0.22s var(--ease-out-expo);
+  }
+  .glass-menu[data-starting-style],
+  .glass-menu[data-ending-style] {
+    opacity: 0;
+    scale: 0.94;
+    translate: 0 -6px;
+    filter: blur(4px);
+  }
+  .glass-menu[data-side="top"][data-starting-style],
+  .glass-menu[data-side="top"][data-ending-style] {
+    translate: 0 6px;
+  }
+  .glass-menu[data-ending-style] {
+    transition:
+      opacity 0.14s ease-out,
+      scale 0.14s ease-out,
+      translate 0.14s ease-out,
+      filter 0.14s ease-out;
+  }
+
+  .glass-menu-item {
+    border-radius: calc(var(--radius) * 0.6);
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  .glass-menu-item[data-highlighted] {
+    background-color: rgb(238 230 211 / 0.08);
+    color: var(--foreground);
+  }
+
+  /* ---------- Quiet text link with a drawn underline ---------- */
+  .ink-link {
+    position: relative;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.2s ease;
+  }
+  .ink-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -0.3em;
+    height: 1px;
+    background: currentColor;
+    scale: 0 1;
+    transform-origin: right center;
+    transition: scale 0.45s var(--ease-out-expo);
+  }
+  /* The current section is underlined in lagoon, a little heavier. */
+  .ink-link[aria-current="page"]::after {
+    scale: 1 1;
+    height: 2px;
+    background: var(--lagoon);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .ink-link:hover::after {
+      scale: 1 1;
+      transform-origin: left center;
+    }
+  }
+  .ink-link:focus-visible::after {
+    scale: 1 1;
+    transform-origin: left center;
+  }
+
+  /* ---------- Icon swap ---------- */
+
+  /*
+   * Two or more icons stacked in one cell; the one marked [data-hidden]
+   * shrinks, blurs and fades while the other grows in. Transitions, not
+   * keyframes, so a quick double toggle reverses mid-flight.
+   */
+  .icon-swap {
+    display: inline-grid;
+    place-items: center;
+  }
+  .icon-swap > * {
+    grid-area: 1 / 1;
+    transition:
+      opacity 0.2s var(--ease-out-expo),
+      scale 0.25s var(--ease-out-expo),
+      filter 0.2s var(--ease-out-expo);
+  }
+  .icon-swap > [data-hidden] {
+    opacity: 0;
+    scale: 0.25;
+    filter: blur(4px);
+  }
+
+  /* A "not yet" shake, played once from JS (top-bar.tsx). */
+  .nudge {
+    animation: nudge 0.36s var(--ease-out-expo);
+  }
+  @keyframes nudge {
+    20% {
+      translate: -4px 0;
+    }
+    45% {
+      translate: 3px 0;
+    }
+    70% {
+      translate: -1.5px 0;
+    }
+  }
+
+  /* ---------- Home entrance ---------- */
+
+  /*
+   * Text rises out of an invisible slot (mask reveal): the wrapper clips at
+   * its bottom edge only, so accents above the line are never cut. Delays
+   * come from --d on each element. Everything ends visible even if the
+   * animation never runs (fill-mode both only holds during the delay).
+   */
+  .rise-mask {
+    display: block;
+    clip-path: inset(-0.5em -0.2em 0 -0.2em);
+  }
+  .rise {
+    display: inline-block;
+    animation: home-rise 1.1s var(--ease-out-expo) var(--d, 0ms) both;
+  }
+  .fade-up {
+    animation: home-fade-up 0.9s var(--ease-out-expo) var(--d, 0ms) both;
+  }
+  .fade-in {
+    animation: home-fade 1s ease var(--d, 0ms) both;
+  }
+  /* A hairline that draws from the left. */
+  .draw-x {
+    transform-origin: left center;
+    animation: home-draw-x 1.2s var(--ease-out-expo) var(--d, 0ms) both;
+  }
+  /* An SVG stroke (pathLength=1) that draws itself. */
+  .draw-stroke {
+    animation: home-draw-stroke 1.6s var(--ease-out-expo) var(--d, 0ms) both;
+  }
+
+  @keyframes home-rise {
+    from {
+      transform: translateY(105%);
+    }
+  }
+  @keyframes home-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+  @keyframes home-fade {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes home-draw-x {
+    from {
+      transform: scaleX(0);
+    }
+  }
+  @keyframes home-draw-stroke {
+    from {
+      stroke-dashoffset: 1;
+    }
+  }
+
+  /* ---------- Fallbacks and preferences ---------- */
+
+  /* No backdrop-filter: a denser fill keeps text legible over the water. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass,
+    .glass-button {
+      background-color: rgb(11 33 41 / 0.92);
+    }
+    .glass-panel {
+      background-color: var(--glass-solid);
+    }
+  }
+
+  /* Reduced transparency: glass becomes solid. */
+  @media (prefers-reduced-transparency: reduce) {
+    .glass,
+    .glass-button,
+    .glass-panel {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      background-color: var(--glass-solid);
+    }
+  }
+
+  /* More contrast: a defined, solid edge and full-ink labels. */
+  @media (prefers-contrast: more) {
+    .glass::before,
+    .glass-button::before,
+    .glass-panel::before {
+      background: rgb(238 230 211 / 0.6);
+    }
+  }
+
+  /* Reduced motion: no travel, scaling or tilting; fades and colour stay. */
+  @media (prefers-reduced-motion: reduce) {
+    .glass-button,
+    .glass-primary,
+    .glass-press {
+      transition-property: opacity, color, background-color, box-shadow;
+      transition-duration: 0.2s;
+    }
+    .glass-button:active,
+    .glass-button[data-pressed],
+    .glass-primary:active,
+    .glass-press:active {
+      scale: none;
+    }
+    .glass-menu {
+      transition: opacity 0.15s ease;
+    }
+    .glass-menu[data-starting-style],
+    .glass-menu[data-ending-style] {
+      scale: none;
+      translate: none;
+      filter: none;
+    }
+    .ink-link::after {
+      transition: opacity 0.2s ease;
+    }
+    .icon-swap > * {
+      transition: opacity 0.15s ease;
+    }
+    .icon-swap > [data-hidden] {
+      scale: none;
+      filter: none;
+    }
+    .nudge {
+      animation: none;
+    }
+    .rise,
+    .fade-up,
+    .draw-x,
+    .draw-stroke {
+      animation: home-fade 0.4s ease var(--d, 0ms) both;
+    }
+  }
+}
