@@ -1,3 +1,5 @@
+//só eu e Deus sabemos como foi difícil chegar nesse resultado de design kkkk//
+
 ---
 name: Atol
 description: Hub pessoal do dia, desenhado como um atol num oceano noturno.
