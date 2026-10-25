@@ -19,7 +19,7 @@ import { playSound } from "@/lib/sound";
  * the left, the day's figures and the clock ring on the right, the night
  * ocean (Sky) showing through the island's transparent canvas. On phones the
  * same parts stack: wordmark, island (takes the remaining height), a row of
- * figures.
+ * figures, and the tab bar (components/shared/tab-bar.tsx) below it all.
  */
 export default function Home({ user }: { user: { id: string; name: string } }) {
   const { data } = useOrbita(user.id);
@@ -33,7 +33,7 @@ export default function Home({ user }: { user: { id: string; name: string } }) {
   }, []);
 
   return (
-    <div className="relative isolate flex h-dvh flex-col overflow-hidden">
+    <div className="relative isolate flex h-[calc(100dvh-var(--tabbar-space))] flex-col overflow-hidden">
       <Sky />
       <TopBar name={user.name} />
 

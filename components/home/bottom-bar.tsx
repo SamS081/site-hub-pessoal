@@ -5,10 +5,10 @@ import { dateKey } from "@/lib/orbita";
 
 const delay = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
 
-/** The foot of the screen: the copyright and today's date. */
+/** The foot of the screen: the copyright and today's date. On phones the tab bar takes its place. */
 export function BottomBar({ now }: { now: Date }) {
   return (
-    <footer className="relative z-20 shrink-0">
+    <footer className="relative z-20 hidden shrink-0 md:block">
       <div className="flex h-12 items-center justify-between gap-4 px-(--gutter) text-[0.6875rem] font-medium tracking-[0.12em] text-muted-foreground uppercase lg:h-[clamp(3.5rem,8vh,5rem)] lg:text-xs">
         <p className="fade-in whitespace-nowrap" style={delay(1500)}>
           © {now.getFullYear()} Atol

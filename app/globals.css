@@ -4,6 +4,7 @@
 @import "./styles/sky.css";
 @import "./styles/glass.css";
 @import "./styles/island.css";
+@import "./styles/tabs.css";
 
 @custom-variant dark (&:is(.dark *));
 

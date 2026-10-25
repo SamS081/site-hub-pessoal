@@ -14,6 +14,8 @@ import { createClient, type Client } from "@libsql/client";
  *   sessions         signed-in browsers; only a SHA-256 of the cookie token
  *   password_resets  one-time links to set a new password; also hashed
  *   login_attempts   wrong passwords per e-mail, for the sign-in brake
+ *   user_data        each account's tasks, notes and habits, as one JSON
+ *                    document with a revision number (lib/store.ts)
  */
 
 const SCHEMA = `
@@ -42,6 +44,12 @@ const SCHEMA = `
     email        TEXT PRIMARY KEY,
     count        INTEGER NOT NULL,
     locked_until INTEGER NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS user_data (
+    user_id    TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    data       TEXT NOT NULL,
+    rev        INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
   );
 `;
 

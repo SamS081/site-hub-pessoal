@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { AnimatePresence, LayoutGroup, MotionConfig, motion, type Variants } from "motion/react";
 import {
-  ArrowLeft,
   Check,
   ChevronDown,
   ChevronLeft,
@@ -17,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { signOut } from "@/app/login/actions";
+import { navTypes } from "@/components/shared/sections";
 import { Ambience, useParallax } from "@/components/tarefas/ambience";
 import { Composer, GroupHead, NowLine, TaskRow, UndoToast } from "@/components/tarefas/task-parts";
 import { PERIODS, periodOf } from "@/components/tarefas/time";
@@ -88,7 +88,7 @@ function byTime(a: Task, b: Task) {
 
 function Wordmark() {
   return (
-    <Link href="/" aria-label="Atol, voltar para Hoje" className="group flex items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-(--mata-leaf)">
+    <Link href="/" transitionTypes={navTypes("/tarefas", "/")} aria-label="Atol, voltar para Hoje" className="group flex items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-(--mata-leaf)">
       <span className="mata-glass grid size-11 place-items-center rounded-2xl transition-transform duration-500 ease-(--mata-spring) group-hover:rotate-[-8deg]">
         <Leaf className="size-5 text-(--mata-leaf)" strokeWidth={2} aria-hidden />
       </span>
@@ -158,7 +158,7 @@ function Header({ name, scrolled }: { name: string; scrolled: boolean }) {
               {SECTIONS.map((s) => (
                 <li key={s.label}>
                   {s.href ? (
-                    <Link href={s.href} aria-current={s.current ? "page" : undefined} className="mata-nav-link">
+                    <Link href={s.href} transitionTypes={navTypes("/tarefas", s.href)} aria-current={s.current ? "page" : undefined} className="mata-nav-link">
                       {s.label}
                     </Link>
                   ) : (
@@ -171,11 +171,6 @@ function Header({ name, scrolled }: { name: string; scrolled: boolean }) {
               ))}
             </ul>
           </nav>
-
-          <Link href="/" className="mata-btn mata-glass h-11 rounded-full px-4 text-sm font-semibold md:hidden">
-            <ArrowLeft className="size-4" aria-hidden />
-            Hoje
-          </Link>
 
           <DropdownMenu onOpenChange={(open) => playSound(open ? "open" : "close")}>
             <DropdownMenuTrigger
@@ -650,7 +645,7 @@ export default function TasksPage({ user }: { user: { id: string; name: string }
             animate={{ opacity: scrolled ? 0 : 1 }}
             transition={{ duration: 0.6, ease: EASE, delay: scrolled ? 0 : 1.4 }}
             tabIndex={scrolled ? -1 : 0}
-            className="mata-btn mata-glass mata-glass-dark mata-cue absolute bottom-8 left-1/2 h-11 -translate-x-1/2 rounded-full px-5 text-sm font-semibold"
+            className="mata-btn mata-glass mata-glass-dark mata-cue absolute bottom-[calc(var(--tabbar-space)+2rem)] left-1/2 h-11 -translate-x-1/2 rounded-full px-5 text-sm font-semibold"
           >
             Ver lista
             <ChevronDown className="mata-cue-icon size-4" aria-hidden />

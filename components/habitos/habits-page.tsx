@@ -33,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AtolMark } from "@/components/shared/logo";
+import { navTypes } from "@/components/shared/sections";
 import { FieldScene } from "@/components/habitos/field-scene";
 import { dateKey, useNow, useOrbita, weekOf, type Habit } from "@/lib/orbita";
 import { holdTone, playSound, setSoundOn, useSoundOn } from "@/lib/sound";
@@ -192,19 +193,15 @@ function Header({ name }: { name: string }) {
       className="lav-header"
     >
       <nav aria-label="Seções" className="lav-pill" data-scrolled={scrolled ? "" : undefined}>
-        <Link href="/" aria-label="Atol, voltar para Hoje" className="lav-pill-mark" onClick={() => playSound("hab-tick")}>
+        <Link href="/" transitionTypes={navTypes("/habitos", "/")} aria-label="Atol, voltar para Hoje" className="lav-pill-mark" onClick={() => playSound("hab-tick")}>
           <AtolMark tone="mono" className="size-[1.375rem]" />
         </Link>
         <ul className="flex items-center">
-          <li className="sm:hidden">
-            <Link href="/" className="lav-pill-link">
-              Hoje
-            </Link>
-          </li>
           {SECTIONS.map((s) => (
-            <li key={s.label} className={s.current ? "" : "hidden sm:block"}>
+            <li key={s.label} className={s.current ? "" : "hidden md:block"}>
               <Link
                 href={s.href}
+                transitionTypes={navTypes("/habitos", s.href)}
                 aria-current={s.current ? "page" : undefined}
                 className="lav-pill-link"
                 onClick={() => !s.current && playSound("hab-tick")}

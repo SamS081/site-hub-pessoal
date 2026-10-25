@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { useCloudSync } from "@/lib/sync";
+
 export type Task = {
   id: string;
   title: string;
@@ -36,7 +38,10 @@ export type OrbitaData = {
   sample: boolean;
 };
 
-/* Each account keeps its own day in this browser. */
+/*
+ * Each account's day lives on the server (lib/sync.ts) and is cached in this
+ * browser, so pages open at once and keep working offline.
+ */
 const storageKey = (userId: string) => `orbita:v1:${userId}`;
 
 export function dateKey(d: Date) {
@@ -117,22 +122,49 @@ function sampleData(today: Date): OrbitaData {
   };
 }
 
-function load(userId: string, today: Date): OrbitaData {
+/*
+ * True for data with nothing of the person's own in it: empty, or only the
+ * example content (matched by title, as its ids are random). Such data gives
+ * way to the account's real data on a browser's first sync.
+ */
+function isSample(d: OrbitaData) {
+  const s = sampleData(new Date());
+  const titles = new Set([...s.tasks.map((t) => t.title), ...s.notes.map((n) => n.title), ...s.habits.map((h) => h.name)]);
+  return (
+    d.tasks.every((t) => titles.has(t.title)) &&
+    d.notes.every((n) => titles.has(n.title)) &&
+    d.habits.every((h) => titles.has(h.name))
+  );
+}
+
+const EMPTY: OrbitaData = { tasks: [], notes: [], habits: [], sample: false };
+
+/** This browser's copy, or null when it has none yet. */
+function load(userId: string): OrbitaData | null {
   try {
     const raw = window.localStorage.getItem(storageKey(userId));
     if (raw) return JSON.parse(raw) as OrbitaData;
   } catch {
-    // Storage blocked or corrupt: fall through to the example content.
+    // Storage blocked or corrupt: the server's copy fills in.
   }
-  return sampleData(today);
+  return null;
 }
 
 /**
- * Local-first store for the home. Must render client-only (it reads
- * localStorage during the first render).
+ * The account's tasks, notes and habits: read from this browser's copy,
+ * synced with the server in the background. Must render client-only (it
+ * reads localStorage during the first render).
  */
 export function useOrbita(userId: string) {
-  const [data, setData] = useState<OrbitaData>(() => load(userId, new Date()));
+  // With no copy here yet, start empty until the server answers, rather than
+  // flashing the example content over the person's real day.
+  const [cached] = useState(() => load(userId));
+  const [data, setData] = useState<OrbitaData>(() => cached ?? EMPTY);
+  useCloudSync(userId, data, setData, {
+    fresh: cached === null,
+    makeSample: () => sampleData(new Date()),
+    isSample,
+  });
 
   useEffect(() => {
     try {

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Geist_Mono, Manrope } from "next/font/google";
+import { TabBar } from "@/components/shared/tab-bar";
 import "./globals.css";
 
 /*
@@ -32,15 +33,23 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: "#04121a",
   colorScheme: "dark",
+  // Lets the tab bar sit clear of the home indicator (env(safe-area-inset-bottom)).
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="pt-BR"
+      // Next turns smooth scrolling off while it resets the scroll on a route
+      // change, so a new page opens at the top instead of gliding up to it.
+      data-scroll-behavior="smooth"
       className={`${manrope.variable} ${geistMono.variable} ${bricolage.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <TabBar />
+      </body>
     </html>
   );
 }

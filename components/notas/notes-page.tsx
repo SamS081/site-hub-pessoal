@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CloudSky } from "@/components/notas/cloud-sky";
+import { navTypes } from "@/components/shared/sections";
 import { useOrbita, type Note } from "@/lib/orbita";
 import { playSound, setSoundOn, useSoundOn } from "@/lib/sound";
 
@@ -190,7 +191,7 @@ function Header({ name }: { name: string }) {
       data-scrolled={scrolled ? "" : undefined}
       className="luz-header"
     >
-      <Link href="/" aria-label="Atol, voltar para Hoje" className="luz-brand">
+      <Link href="/" transitionTypes={navTypes("/notas", "/")} aria-label="Atol, voltar para Hoje" className="luz-brand">
         atol
       </Link>
 
@@ -198,7 +199,7 @@ function Header({ name }: { name: string }) {
         <ul className="luz-nav">
           {SECTIONS.map((s) => (
             <li key={s.label}>
-              <Link href={s.href} aria-current={s.current ? "page" : undefined} className="luz-nav-link">
+              <Link href={s.href} transitionTypes={navTypes("/notas", s.href)} aria-current={s.current ? "page" : undefined} className="luz-nav-link">
                 {s.label}
               </Link>
             </li>

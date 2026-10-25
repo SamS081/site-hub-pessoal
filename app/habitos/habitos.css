@@ -1017,7 +1017,7 @@
 .lav-toast-slot {
   position: fixed;
   left: 50%;
-  bottom: clamp(1rem, 4vh, 2rem);
+  bottom: calc(var(--tabbar-space) + clamp(1rem, 4vh, 2rem));
   z-index: 70;
   translate: -50% 0;
   width: max-content;

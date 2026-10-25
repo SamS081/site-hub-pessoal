@@ -369,7 +369,7 @@ export function UndoToast({ title, onUndo, onClose }: { title: string | null; on
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 16, scale: 0.97 }}
           transition={{ type: "spring", stiffness: 420, damping: 32 }}
-          className="mata-glass mata-glass-dark mata-toast fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 py-2 pr-2 pl-4"
+          className="mata-glass mata-glass-dark mata-toast fixed bottom-[calc(var(--tabbar-space)+1.5rem)] left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 py-2 pr-2 pl-4"
         >
           <p className="max-w-[16rem] truncate text-sm">
             <span className="text-(--mata-muted)">Apagada:</span> {title}

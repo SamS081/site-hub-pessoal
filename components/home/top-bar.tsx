@@ -5,6 +5,7 @@ import Link from "next/link";
 import { LogOut, Volume2, VolumeX } from "lucide-react";
 
 import { AtolMark } from "@/components/shared/logo";
+import { navTypes } from "@/components/shared/sections";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -81,7 +82,7 @@ function SoundItem() {
 export function TopBar({ name }: { name: string }) {
   return (
     <header className="relative z-30 shrink-0">
-      <div className="grid h-16 grid-cols-[1fr_auto] items-center gap-4 px-(--gutter) lg:h-[clamp(4.5rem,11vh,6.5rem)] lg:grid-cols-[1fr_auto_1fr]">
+      <div className="grid h-16 grid-cols-[1fr_auto] items-center gap-4 px-(--gutter) md:grid-cols-[1fr_auto_1fr] lg:h-[clamp(4.5rem,11vh,6.5rem)]">
         <a
           href="#atol"
           aria-label="Atol, início"
@@ -91,7 +92,7 @@ export function TopBar({ name }: { name: string }) {
           <AtolMark className="size-6 lg:size-7" />
         </a>
 
-        <nav aria-label="Seções" className="hidden lg:block">
+        <nav aria-label="Seções" className="hidden md:block">
           <ul className="flex items-center gap-[clamp(1.75rem,3.2vw,3.25rem)] text-sm font-medium text-foreground/80">
             {SECTIONS.map((s, i) => (
               <li key={s.label} className="fade-in" style={delay(200 + i * 60)}>
@@ -100,7 +101,7 @@ export function TopBar({ name }: { name: string }) {
                     {s.label}
                   </a>
                 ) : s.href ? (
-                  <Link href={s.href} className="ink-link inline-block hover:text-foreground">
+                  <Link href={s.href} transitionTypes={navTypes("/", s.href)} className="ink-link inline-block hover:text-foreground">
                     {s.label}
                   </Link>
                 ) : (
@@ -134,7 +135,7 @@ export function TopBar({ name }: { name: string }) {
               <div className="px-2.5 pt-2 pb-2.5">
                 <p className="truncate text-sm font-medium text-foreground">{name}</p>
                 <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
-                  Tarefas e notas ficam neste navegador
+                  Tarefas, notas e hábitos salvos na sua conta
                 </p>
               </div>
               <DropdownMenuSeparator />

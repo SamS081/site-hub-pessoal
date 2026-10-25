@@ -1,0 +1,225 @@
+/*
+ * The tab bar (components/shared/tab-bar.tsx) and the page-to-page motion.
+ *
+ * --tabbar-space is the room the bar takes at the foot of the screen: zero
+ * from md up and on pages without the bar, so pages can always subtract it
+ * (full-height screens, bottom-anchored cues and toasts).
+ */
+:root {
+  --tabbar-h: 4rem;
+  --tabbar-gap: max(0.75rem, env(safe-area-inset-bottom));
+  --tabbar-space: 0px;
+}
+
+@media (width < 48rem) {
+  html:has(.atol-tabs) {
+    --tabbar-space: calc(var(--tabbar-h) + var(--tabbar-gap) + 0.5rem);
+  }
+  html:has(.atol-tabs) body {
+    padding-bottom: var(--tabbar-space);
+  }
+}
+
+/* ---------- the bar ---------- */
+
+.atol-tabs {
+  /* Laguna, the home's night sea, unless a section says otherwise. */
+  --tab-bg: rgb(6 24 33 / 0.78);
+  --tab-ink: #eee6d3;
+  --tab-muted: rgb(238 230 211 / 0.62);
+  --tab-pill: #2fd3c0;
+  --tab-on-pill: #04121a;
+  --tab-edge: rgb(238 230 211 / 0.12);
+  --tab-shadow: 0 18px 40px -16px rgb(0 0 0 / 0.7);
+
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  bottom: var(--tabbar-gap);
+  translate: -50% 0;
+  width: min(calc(100% - 2rem), 26rem);
+  height: var(--tabbar-h);
+  padding: 0.375rem;
+  border-radius: 999px;
+  background: var(--tab-bg);
+  box-shadow:
+    inset 0 0 0 1px var(--tab-edge),
+    var(--tab-shadow);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  backdrop-filter: blur(14px) saturate(1.3);
+  color: var(--tab-muted);
+  transition:
+    background-color 360ms var(--ease-out-expo),
+    color 360ms var(--ease-out-expo),
+    box-shadow 360ms var(--ease-out-expo);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+@media (width >= 48rem) {
+  .atol-tabs {
+    display: none;
+  }
+}
+
+.atol-tabs[data-tone="mata"] {
+  --tab-bg: rgb(9 26 14 / 0.8);
+  --tab-ink: #eef5e8;
+  --tab-muted: rgb(238 245 232 / 0.64);
+  --tab-pill: #8fe06b;
+  --tab-on-pill: #082210;
+  --tab-edge: rgb(238 245 232 / 0.14);
+}
+
+.atol-tabs[data-tone="luz"] {
+  --tab-bg: rgb(255 248 238 / 0.82);
+  --tab-ink: #3b2a21;
+  --tab-muted: rgb(59 42 33 / 0.66);
+  --tab-pill: #3b2a21;
+  --tab-on-pill: #fffaf2;
+  --tab-edge: rgb(255 255 255 / 0.7);
+  --tab-shadow: 0 18px 40px -18px rgb(70 35 25 / 0.5);
+}
+
+.atol-tabs[data-tone="lav"] {
+  --tab-bg: rgb(22 27 54 / 0.8);
+  --tab-ink: #edeefb;
+  --tab-muted: rgb(237 238 251 / 0.64);
+  --tab-pill: #c9b6ff;
+  --tab-on-pill: #1a1435;
+  --tab-edge: rgb(237 238 251 / 0.14);
+}
+
+.atol-tabs-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  height: 100%;
+}
+
+.atol-tabs-item {
+  display: flex;
+}
+
+.atol-tab {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  outline: none;
+  touch-action: manipulation;
+  transition:
+    color 240ms var(--ease-out-expo),
+    scale 380ms var(--ease-spring);
+}
+
+.atol-tab[data-on] {
+  color: var(--tab-on-pill);
+}
+
+.atol-tab:active {
+  scale: 0.94;
+  transition-duration: 120ms;
+}
+
+.atol-tab:focus-visible {
+  outline: 2px solid var(--tab-pill);
+  outline-offset: -2px;
+}
+
+.atol-tab-pill {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--tab-pill);
+  transition: background-color 360ms var(--ease-out-expo);
+}
+
+.atol-tab-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+@media (hover: hover) {
+  .atol-tab:not([data-on]):hover {
+    color: var(--tab-ink);
+  }
+}
+
+/* ---------- page-to-page motion ---------- */
+
+/*
+ * Navigations between sections carry a direction (components/shared/
+ * sections.ts). The whole viewport is one snapshot, so this costs two
+ * composited layers sliding a few pixels and fading: cheap even on phones.
+ * The old page leaves quickly; the new one arrives a touch slower.
+ */
+::view-transition-group(.tabs-hold) {
+  animation: none;
+}
+::view-transition-old(.tabs-hold) {
+  display: none;
+}
+::view-transition-new(.tabs-hold) {
+  animation: none;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: var(--ease-out-expo);
+}
+
+html:active-view-transition-type(nav-forward)::view-transition-old(root) {
+  animation: atol-page-out 200ms cubic-bezier(0.4, 0, 1, 1) both;
+  --page-shift: -2.5rem;
+}
+html:active-view-transition-type(nav-forward)::view-transition-new(root) {
+  animation: atol-page-in 380ms var(--ease-out-expo) 40ms both;
+  --page-shift: 2.5rem;
+}
+html:active-view-transition-type(nav-back)::view-transition-old(root) {
+  animation: atol-page-out 200ms cubic-bezier(0.4, 0, 1, 1) both;
+  --page-shift: 2.5rem;
+}
+html:active-view-transition-type(nav-back)::view-transition-new(root) {
+  animation: atol-page-in 380ms var(--ease-out-expo) 40ms both;
+  --page-shift: -2.5rem;
+}
+
+@keyframes atol-page-out {
+  to {
+    opacity: 0;
+    transform: translateX(var(--page-shift));
+  }
+}
+@keyframes atol-page-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--page-shift));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+  .atol-tab,
+  .atol-tabs,
+  .atol-tab-pill {
+    transition: none;
+  }
+}

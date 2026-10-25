@@ -413,7 +413,7 @@
 }
 .luz-down {
   position: absolute;
-  bottom: clamp(1rem, 4vh, 2rem);
+  bottom: calc(var(--tabbar-space) + clamp(1rem, 4vh, 2rem));
   left: 50%;
   translate: -50% 0;
   height: 2.5rem;
@@ -953,7 +953,7 @@
 .luz-toast-slot {
   position: fixed;
   left: 50%;
-  bottom: clamp(1rem, 4vh, 2rem);
+  bottom: calc(var(--tabbar-space) + clamp(1rem, 4vh, 2rem));
   z-index: 70;
   translate: -50% 0;
   width: max-content;
