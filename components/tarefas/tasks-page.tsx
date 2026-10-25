@@ -557,7 +557,7 @@ export default function TasksPage({ user }: { user: { id: string; name: string }
           <div ref={heroRef} className="mata-hero flex w-full flex-col items-center">
             {/* The date, between its arrows. */}
             <motion.div
-              className="flex items-center gap-4 sm:gap-6"
+              className="flex max-w-full items-center gap-3 sm:gap-6"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: EASE, delay: 0.35 }}
@@ -565,14 +565,14 @@ export default function TasksPage({ user }: { user: { id: string; name: string }
               <button type="button" onClick={() => pick(shiftKey(selected, -1))} aria-label="Dia anterior" className="mata-btn mata-glass mata-glass-dark size-10 shrink-0 rounded-full">
                 <ChevronLeft className="size-4" aria-hidden />
               </button>
-              <p id="mata-dia" className="mata-eyebrow flex items-center gap-3" aria-live="polite">
-                <span aria-hidden className="mata-rule" />
+              <p id="mata-dia" className="mata-eyebrow flex min-w-0 items-center gap-3" aria-live="polite">
+                <span aria-hidden className="mata-rule hidden sm:block" />
                 <span className="min-w-0 whitespace-nowrap">
                   {offset === 0 ? "Hoje · " : ""}
                   <span className="sm:hidden">{shortLabel}</span>
                   <span className="hidden sm:inline">{dayLabel}</span>
                 </span>
-                <span aria-hidden className="mata-rule mata-rule-r" />
+                <span aria-hidden className="mata-rule mata-rule-r hidden sm:block" />
               </p>
               <button type="button" onClick={() => pick(shiftKey(selected, 1))} aria-label="Próximo dia" className="mata-btn mata-glass mata-glass-dark size-10 shrink-0 rounded-full">
                 <ChevronRight className="size-4" aria-hidden />

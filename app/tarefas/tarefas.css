@@ -350,6 +350,13 @@
   text-transform: uppercase;
   color: var(--mata-leaf);
 }
+/* On phones the date sits between its arrows in one line: a touch smaller and tighter. */
+@media (width < 40rem) {
+  .mata-eyebrow {
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+  }
+}
 
 .mata-caps {
   font-size: 0.6875rem;
@@ -373,7 +380,8 @@
 .mata-title {
   position: relative;
   --mata-cut: 50%;
-  font-size: clamp(3.5rem, 11.5vw, 13rem);
+  /* The 12.5vw cap keeps the word inside the gutters on phones. */
+  font-size: min(clamp(3.5rem, 11.5vw, 13rem), 12.5vw);
   line-height: 0.84;
   letter-spacing: -0.02em;
 }
